@@ -12,7 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { t, i18n } = useTranslation();
+  const { t, i18n } = useTranslation(["common", "auth", "dashboard"]);
   const { user, logout } = useAuth();
 
   const toggleMenu = () => setIsMenuOpen((prev) => !prev);
@@ -23,32 +23,32 @@ const Header = () => {
 
   const menuItems = [
     {
-      label: t("home_page"),
+      label: t("home_page", { ns: "common" }),
       path: "/",
       roles: [""],
     },
     {
-      label: t("dashboard"),
+      label: t("dashboard", { ns: "dashboard" }),
       path: "/dashboard",
       roles: ["admin"],
     },
     {
-      label: t("users"),
+      label: t("users", { ns: "dashboard" }),
       path: "/admin/users",
       roles: ["admin"],
     },
     {
-      label: t("content"),
+      label: t("content", { ns: "dashboard" }),
       path: "/admin/content",
       roles: ["admin"],
     },
     {
-      label: t("media"),
+      label: t("media", { ns: "dashboard" }),
       path: "/admin/media",
       roles: ["admin"],
     },
     {
-      label: t("seo"),
+      label: t("seo", { ns: "dashboard" }),
       path: "/admin/seo",
       roles: ["admin"],
     },
@@ -56,11 +56,11 @@ const Header = () => {
 
   const authItems = [
     {
-      label: t("login_page"),
+      label: t("login_page", { ns: "auth" }),
       path: "/login",
     },
     {
-      label: t("register_page"),
+      label: t("register_page", { ns: "auth" }),
       path: "/register",
     },
   ];
@@ -93,7 +93,7 @@ const Header = () => {
             onClick={logout}
             className="text-lg transition-all duration-300 px-4 py-2 rounded-lg hover:bg-red-600 hover:text-white"
           >
-            {t("logout")}
+            {t("logout", { ns: "common" })}
           </button>
         </NavigationMenuItem>
       ) : (
@@ -124,7 +124,7 @@ const Header = () => {
               {user.name.charAt(0).toUpperCase()}
             </div>
             <span className="text-white font-semibold text-lg truncate">
-              {t("welcome")}, {user.name}!
+              {t("welcome", { ns: "common" })}, {user.name}!
             </span>
           </div>
         )}

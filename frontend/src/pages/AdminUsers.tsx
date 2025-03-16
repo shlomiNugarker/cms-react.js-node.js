@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { httpService } from "@/services/http.service";
 import { useNavigate } from "react-router-dom";
-import { t } from "i18next";
+import { useTranslation } from "react-i18next";
 
 interface User {
   _id: string;
@@ -14,6 +14,7 @@ interface User {
 const AdminUsers = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation(["common", "dashboard"]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -51,15 +52,15 @@ const AdminUsers = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">{t("user_management")}</h1>
+      <h1 className="text-2xl font-bold mb-4">{t("manage_users", { ns: "dashboard" })}</h1>
 
       <table className="w-full border-collapse border border-gray-300 mt-4">
         <thead>
           <tr className="bg-gray-200">
-            <th className="border p-2">{t("name")}</th>
-            <th className="border p-2">{t("email")}</th>
-            <th className="border p-2">{t("role")}</th>
-            <th className="border p-2">{t("actions")}</th>
+            <th className="border p-2">{t("name", { ns: "common" })}</th>
+            <th className="border p-2">{t("email", { ns: "common" })}</th>
+            <th className="border p-2">{t("role", { ns: "common" })}</th>
+            <th className="border p-2">{t("actions", { ns: "common" })}</th>
           </tr>
         </thead>
         <tbody>
@@ -67,14 +68,14 @@ const AdminUsers = () => {
             <tr key={user._id} className="text-center">
               <td className="border p-2">{user.name}</td>
               <td className="border p-2">{user.email}</td>
-              <td className="border p-2">{t(user.role)}</td>
+              <td className="border p-2">{t(user.role, { ns: "dashboard" })}</td>
               <td className="border p-2">
                 {user.role !== "admin" && (
                   <button
                     className="bg-red-500 text-white px-3 py-1 rounded"
                     onClick={() => handleDeleteUser(user._id)}
                   >
-                    {t("delete")}
+                    {t("delete", { ns: "common" })}
                   </button>
                 )}
               </td>

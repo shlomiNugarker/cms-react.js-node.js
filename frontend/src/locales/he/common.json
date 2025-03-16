@@ -1,0 +1,19 @@
+{
+  "home_page": "בית",
+  "home_welcome": "ברוכים הבאים לדף הבית שלנו",
+  "welcome": "ברוך הבא",
+  "logout": "התנתקות",
+  "language": "שפה",
+  "already_have_account": "כבר יש לך חשבון? התחבר כאן",
+  "dont_have_account": "אין לך חשבון? הירשם כאן",
+  "name": "שם",
+  "email": "דואר אלקטרוני",
+  "password": "סיסמה",
+  "confirm_password": "אימות סיסמה",
+  "unauthorized": "אינך מורשה לצפות בדף זה",
+  "role": "תפקיד",
+  "actions": "פעולות",
+  "delete": "מחק",
+  "activate": "הפעל",
+  "deactivate": "השבת"
+} 

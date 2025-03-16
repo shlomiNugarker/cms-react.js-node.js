@@ -8,7 +8,7 @@ export const LanguageToggle = ({
 }: {
   changeLanguage: (lng: string) => void;
 }) => {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation("common");
   const [isOpen, setIsOpen] = useState(false);
   const isRtl = i18n.dir() === "rtl";
 
@@ -29,7 +29,7 @@ export const LanguageToggle = ({
     <div className="relative text-left">
       <div dir={i18n.dir()}>
         <button
-          aria-label="Language options"
+          aria-label={t("language")}
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className="flex items-center justify-center w-full rounded-lg border border-border bg-background px-2 py-2 text-sm font-medium text-foreground shadow-sm  hover:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"

@@ -1,0 +1,19 @@
+{
+  "home_page": "Home page",
+  "home_welcome": "Welcome to our home page",
+  "welcome": "Welcome",
+  "logout": "Logout",
+  "language": "Language",
+  "already_have_account": "Already have an account? Login here",
+  "dont_have_account": "Don't have an account? Register here",
+  "name": "Name",
+  "email": "Email",
+  "password": "Password",
+  "confirm_password": "Confirm Password",
+  "unauthorized": "You are not authorized to view this page",
+  "role": "Role",
+  "actions": "Actions",
+  "delete": "Delete",
+  "activate": "Activate",
+  "deactivate": "Deactivate"
+} 

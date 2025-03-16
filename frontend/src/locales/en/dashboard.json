@@ -1,0 +1,23 @@
+{
+  "dashboard": "Dashboard",
+  "coach_dashboard": "Coach Dashboard",
+  "trainee_dashboard": "Trainee Dashboard",
+  "admin_dashboard": "Admin Dashboard",
+  "manage_users": "Manage Users",
+  "user_management": "User Management",
+  "my_trainees": "My Trainees",
+  "trainee": "Trainee",
+  "coach": "Coach",
+  "super_admin": "Super Admin",
+  "admin": "Admin",
+  "user": "User",
+  "coach_management": "Coach Management",
+  "add_trainee": "Add Trainee",
+  "add_coach": "Add Coach",
+  "coach_added": "Coach added successfully",
+  "content_management": "Content Management",
+  "users": "Users",
+  "content": "Content",
+  "media": "Media",
+  "seo": "SEO"
+} 

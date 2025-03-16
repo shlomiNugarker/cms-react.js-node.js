@@ -10,6 +10,13 @@ const App = () => {
       i18n.language === "he" || i18n.language === "ar" ? "rtl" : "ltr";
     document.documentElement.dir = dir;
     document.documentElement.lang = i18n.language;
+    
+    // Add RTL-specific class for styling
+    if (dir === "rtl") {
+      document.documentElement.classList.add("rtl");
+    } else {
+      document.documentElement.classList.remove("rtl");
+    }
   }, [i18n.language]);
 
   return <Layout />;

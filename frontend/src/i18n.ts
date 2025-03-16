@@ -1,27 +1,43 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import enTranslation from "./locales/en.json";
-import heTranslation from "./locales/he.json";
+import LanguageDetector from "i18next-browser-languagedetector";
+import Backend from "i18next-http-backend";
+import enCommon from "./locales/en/common.json";
+import heCommon from "./locales/he/common.json";
+import enAuth from "./locales/en/auth.json";
+import heAuth from "./locales/he/auth.json";
+import enDashboard from "./locales/en/dashboard.json";
+import heDashboard from "./locales/he/dashboard.json";
 
-const getUserLanguage = () => {
-  const userLang = navigator.language || navigator.languages[0];
-  return userLang.split("-")[0];
-};
-
-i18n.use(initReactI18next).init({
-  resources: {
-    en: {
-      translation: enTranslation,
+i18n
+  .use(Backend)
+  .use(LanguageDetector)
+  .use(initReactI18next)
+  .init({
+    resources: {
+      en: {
+        common: enCommon,
+        auth: enAuth,
+        dashboard: enDashboard
+      },
+      he: {
+        common: heCommon,
+        auth: heAuth,
+        dashboard: heDashboard
+      }
     },
-    he: {
-      translation: heTranslation,
+    fallbackLng: "he",
+    supportedLngs: ["en", "he"],
+    ns: ["common", "auth", "dashboard"],
+    defaultNS: "common",
+    detection: {
+      order: ["localStorage", "navigator"],
+      caches: ["localStorage"],
+      lookupLocalStorage: "i18nextLng"
     },
-  },
-  lng: getUserLanguage(),
-  fallbackLng: "he",
-  interpolation: {
-    escapeValue: false,
-  },
-});
+    interpolation: {
+      escapeValue: false
+    }
+  });
 
 export default i18n;

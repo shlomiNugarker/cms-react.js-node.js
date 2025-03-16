@@ -1,0 +1,23 @@
+{
+  "dashboard": "לוח בקרה",
+  "coach_dashboard": "לוח בקרה של מאמן",
+  "trainee_dashboard": "לוח בקרה של תלמיד",
+  "admin_dashboard": "לוח בקרה של מנהל",
+  "manage_users": "ניהול משתמשים",
+  "user_management": "ניהול משתמשים",
+  "my_trainees": "התלמידים שלי",
+  "trainee": "תלמיד",
+  "coach": "מאמן",
+  "super_admin": "מנהל מערכת",
+  "admin": "מנהל",
+  "user": "משתמש",
+  "coach_management": "ניהול מאמנים",
+  "add_trainee": "הוסף תלמיד",
+  "add_coach": "הוסף מאמן",
+  "coach_added": "המאמן נוסף בהצלחה",
+  "content_management": "ניהול תוכן",
+  "users": "משתמשים",
+  "content": "תוכן",
+  "media": "מדיה",
+  "seo": "קידום אתרים"
+} 
