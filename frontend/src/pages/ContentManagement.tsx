@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 interface Content {
   _id: string;
@@ -22,6 +23,7 @@ interface Content {
 const ContentManagement: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   const [contents, setContents] = useState<Content[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +53,7 @@ const ContentManagement: React.FC = () => {
       setTotalPages(response.data.totalPages || 1);
       setLoading(false);
     } catch (err) {
-      setError('Failed to fetch content');
+      setError(t('failed_fetch_data', { ns: 'common' }));
       setLoading(false);
     }
   };
@@ -89,7 +91,7 @@ const ContentManagement: React.FC = () => {
                       <td className="py-2 px-4 border-b">{content.title}</td>
                       <td className="py-2 px-4 border-b">{content.contentType}</td>
                       <td className="py-2 px-4 border-b">{content.status}</td>
-                      <td className="py-2 px-4 border-b">{content.author?.name || 'Unknown'}</td>
+                      <td className="py-2 px-4 border-b">{content.author?.name || t('unknown', { ns: 'common' })}</td>
                       <td className="py-2 px-4 border-b">{new Date(content.createdAt).toLocaleDateString()}</td>
                       <td className="py-2 px-4 border-b">
                         <div className="flex gap-2">
@@ -100,7 +102,7 @@ const ContentManagement: React.FC = () => {
                             if (window.confirm(`Are you sure you want to delete "${content.title}"?`)) {
                               axios.delete(`/api/content/${content._id}`)
                                 .then(() => fetchContents())
-                                .catch(() => setError('Failed to delete content'));
+                                .catch(() => setError(t('failed_fetch_data', { ns: 'common' })));
                             }
                           }}>
                             Delete

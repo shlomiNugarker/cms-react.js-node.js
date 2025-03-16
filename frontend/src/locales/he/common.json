@@ -16,5 +16,10 @@
   "delete": "מחק",
   "activate": "הפעל",
   "deactivate": "השבת",
-  "search": "חיפוש"
+  "search": "חיפוש",
+  "failed_load_users": "טעינת המשתמשים נכשלה",
+  "failed_delete_user": "מחיקת המשתמש נכשלה",
+  "failed_fetch_data": "טעינת הנתונים נכשלה",
+  "failed_save_data": "שמירת הנתונים נכשלה",
+  "unknown": "לא ידוע"
 } 
