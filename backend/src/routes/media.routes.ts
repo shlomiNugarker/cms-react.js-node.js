@@ -5,6 +5,18 @@ import multer from 'multer';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
+import { Request, Response, NextFunction } from 'express';
+import { IUser } from '../models/User';
+import mongoose from 'mongoose';
+
+// Extend Express Request type
+declare global {
+  namespace Express {
+    interface Request {
+      user?: IUser & { _id: mongoose.Types.ObjectId };
+    }
+  }
+}
 
 const router = express.Router();
 
@@ -70,4 +82,4 @@ router.post('/upload', authMiddleware, upload.single('file'), mediaController.up
 router.put('/:id', authMiddleware, mediaController.updateMedia);
 router.delete('/:id', authMiddleware, mediaController.deleteMedia);
 
-export default router; 
+export default router;

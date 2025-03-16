@@ -37,7 +37,7 @@ declare global {
 }
 
 // Upload media file
-export const uploadMedia = async (req: FileRequest, res: Response) => {
+export const uploadMedia = async (req: Request, res: Response) => {
   try {
     if (!req.user) {
       return res.status(401).json({ message: 'Unauthorized' });
