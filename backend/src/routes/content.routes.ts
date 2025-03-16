@@ -6,8 +6,9 @@ const router = express.Router();
 
 // Public routes
 router.get('/', contentController.getAllContent);
-router.get('/id/:id', contentController.getContentById);
 router.get('/slug/:slug', contentController.getContentBySlug);
+router.get('/id/:id', contentController.getContentById);
+router.get('/:id', contentController.getContentById);
 
 // Protected routes
 router.post('/', authMiddleware, contentController.createContent);
