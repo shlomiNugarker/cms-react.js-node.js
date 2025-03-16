@@ -23,7 +23,7 @@ interface Content {
 const ContentManagement: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t } = useTranslation(['dashboard', 'common']);
   
   const [contents, setContents] = useState<Content[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,28 +60,28 @@ const ContentManagement: React.FC = () => {
   
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Content Management</h1>
+      <h1 className="text-2xl font-bold mb-4">{t('content_management', { ns: 'dashboard' })}</h1>
       
       {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
       
       <div className="mb-4">
-        <Button onClick={() => navigate('/admin/content/new')}>Create New Content</Button>
+        <Button onClick={() => navigate('/admin/content/new')}>{t('create_new_content', { ns: 'dashboard' })}</Button>
       </div>
       
       {loading ? (
-        <div className="text-center py-4">Loading...</div>
+        <div className="text-center py-4">{t('loading', { ns: 'dashboard' })}</div>
       ) : (
         <>
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white border border-gray-200">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="py-2 px-4 border-b">Title</th>
-                  <th className="py-2 px-4 border-b">Type</th>
-                  <th className="py-2 px-4 border-b">Status</th>
-                  <th className="py-2 px-4 border-b">Author</th>
-                  <th className="py-2 px-4 border-b">Created</th>
-                  <th className="py-2 px-4 border-b">Actions</th>
+                  <th className="py-2 px-4 border-b">{t('title', { ns: 'dashboard' })}</th>
+                  <th className="py-2 px-4 border-b">{t('content_type', { ns: 'dashboard' })}</th>
+                  <th className="py-2 px-4 border-b">{t('status', { ns: 'dashboard' })}</th>
+                  <th className="py-2 px-4 border-b">{t('author', { ns: 'dashboard' })}</th>
+                  <th className="py-2 px-4 border-b">{t('created', { ns: 'dashboard' })}</th>
+                  <th className="py-2 px-4 border-b">{t('actions', { ns: 'common' })}</th>
                 </tr>
               </thead>
               <tbody>
@@ -96,16 +96,16 @@ const ContentManagement: React.FC = () => {
                       <td className="py-2 px-4 border-b">
                         <div className="flex gap-2">
                           <Button variant="outline" size="sm" onClick={() => navigate(`/admin/content/edit/${content._id}`)}>
-                            Edit
+                            {t('edit_content', { ns: 'dashboard' })}
                           </Button>
                           <Button variant="destructive" size="sm" onClick={() => {
-                            if (window.confirm(`Are you sure you want to delete "${content.title}"?`)) {
+                            if (window.confirm(t('confirm_delete_content', { ns: 'dashboard', title: content.title }))) {
                               axios.delete(`/api/content/${content._id}`)
                                 .then(() => fetchContents())
                                 .catch(() => setError(t('failed_fetch_data', { ns: 'common' })));
                             }
                           }}>
-                            Delete
+                            {t('delete', { ns: 'common' })}
                           </Button>
                         </div>
                       </td>
@@ -113,7 +113,7 @@ const ContentManagement: React.FC = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="py-4 text-center">No content found</td>
+                    <td colSpan={6} className="py-4 text-center">{t('no_content_found', { ns: 'dashboard' })}</td>
                   </tr>
                 )}
               </tbody>
@@ -127,17 +127,17 @@ const ContentManagement: React.FC = () => {
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
               >
-                Previous
+                {t('previous', { ns: 'dashboard' })}
               </Button>
               <span className="py-2 px-4">
-                Page {currentPage} of {totalPages}
+                {t('pagination', { ns: 'dashboard', currentPage, totalPages })}
               </span>
               <Button 
                 variant="outline" 
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
               >
-                Next
+                {t('next', { ns: 'dashboard' })}
               </Button>
             </div>
           </div>

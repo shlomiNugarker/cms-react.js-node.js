@@ -20,6 +20,8 @@
   "content": "Content",
   "media": "Media",
   "seo": "SEO",
+  "author": "Author",
+  "created": "Created",
   
   "loading": "Loading...",
   "edit_content": "Edit Content",
@@ -96,5 +98,7 @@
   "keywords_comma_separated": "Enter keywords separated by commas",
   "seo_updated_title": "SEO Updated",
   "seo_updated_desc": "SEO settings have been successfully updated.",
-  "no_content_found": "No content found"
+  "no_content_found": "No content found",
+  "confirm_delete_content": "Are you sure you want to delete \"{{title}}\"?",
+  "pagination": "Page {{currentPage}} of {{totalPages}}"
 } 

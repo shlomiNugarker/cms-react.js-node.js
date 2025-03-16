@@ -20,6 +20,8 @@
   "content": "תוכן",
   "media": "מדיה",
   "seo": "קידום אתרים",
+  "author": "מחבר",
+  "created": "נוצר",
   
   "loading": "טוען...",
   "edit_content": "עריכת תוכן",
@@ -93,5 +95,7 @@
   "keywords_comma_separated": "הזן מילות מפתח מופרדות בפסיקים",
   "seo_updated_title": "ה-SEO עודכן",
   "seo_updated_desc": "הגדרות ה-SEO עודכנו בהצלחה.",
-  "no_content_found": "לא נמצא תוכן"
+  "no_content_found": "לא נמצא תוכן",
+  "confirm_delete_content": "האם אתה בטוח שברצונך למחוק את \"{{title}}\"?",
+  "pagination": "עמוד {{currentPage}} מתוך {{totalPages}}"
 } 
