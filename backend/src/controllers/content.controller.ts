@@ -2,23 +2,46 @@ import { Request, Response } from 'express';
 import Content, { IContent } from '../models/Content';
 import mongoose from 'mongoose';
 import { IUser } from '../models/User';
+import { body, validationResult } from 'express-validator';
 
 // Extended Request interface with user property
 interface AuthRequest extends Request {
   user?: IUser & { _id: mongoose.Types.ObjectId };
 }
 
+// Validation middleware for content
+export const validateContent = [
+  body('title').notEmpty().withMessage('Title is required'),
+  body('content').notEmpty().withMessage('Content is required'),
+  body('contentType').isIn(['post', 'page', 'custom']).withMessage('Invalid content type'),
+  body('status').isIn(['draft', 'published', 'archived']).withMessage('Invalid status'),
+  body('categories').isArray().optional(),
+  body('tags').isArray().optional(),
+  body('customSlug').optional().isString(),
+];
+
 // Create new content
 export const createContent = async (req: AuthRequest, res: Response) => {
   try {
-    const { title, content, contentType, status, categories, tags, metadata, featuredImage } = req.body;
+    // Check validation results
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    
+    const { title, content, contentType, status, categories, tags, metadata, featuredImage, customSlug } = req.body;
     
     if (!req.user) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
     
-    // Generate slug from title
-    const slug = title
+    // Check if user has required role (editor or admin)
+    if (!['editor', 'admin'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'You do not have permission to create content' });
+    }
+    
+    // Generate slug from title or use custom slug
+    const slug = customSlug || title
       .toLowerCase()
       .replace(/[^\w\s]/gi, '')
       .replace(/\s+/g, '-');
@@ -26,7 +49,7 @@ export const createContent = async (req: AuthRequest, res: Response) => {
     // Check if slug already exists
     const existingContent = await Content.findOne({ slug });
     if (existingContent) {
-      return res.status(400).json({ message: 'Content with this title already exists' });
+      return res.status(400).json({ message: 'Content with this title/slug already exists' });
     }
     
     const newContent = new Content({
@@ -146,8 +169,14 @@ export const getContentBySlug = async (req: Request, res: Response) => {
 // Update content
 export const updateContent = async (req: AuthRequest, res: Response) => {
   try {
+    // Check validation results
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    
     const { id } = req.params;
-    const { title, content, contentType, status, categories, tags, metadata, featuredImage } = req.body;
+    const { title, content, contentType, status, categories, tags, metadata, featuredImage, customSlug } = req.body;
     
     if (!req.user) {
       return res.status(401).json({ message: 'Unauthorized' });
@@ -163,23 +192,33 @@ export const updateContent = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: 'Content not found' });
     }
     
-    // Check if user is author or admin
-    if (existingContent.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    // Check if user is author or has required role
+    const isAuthor = existingContent.author.toString() === req.user._id.toString();
+    const hasPermission = ['editor', 'admin'].includes(req.user.role);
+    
+    if (!isAuthor && !hasPermission) {
       return res.status(403).json({ message: 'Not authorized to update this content' });
     }
     
-    // Generate new slug if title changed
+    // Determine slug - use custom slug, keep existing, or generate from new title
     let slug = existingContent.slug;
-    if (title && title !== existingContent.title) {
+    
+    if (customSlug) {
+      // Use provided custom slug
+      slug = customSlug;
+    } else if (title && title !== existingContent.title) {
+      // Generate new slug from title
       slug = title
         .toLowerCase()
         .replace(/[^\w\s]/gi, '')
         .replace(/\s+/g, '-');
-        
-      // Check if new slug already exists (excluding current content)
+    }
+    
+    // Check if new slug already exists (excluding current content)
+    if (slug !== existingContent.slug) {
       const slugExists = await Content.findOne({ slug, _id: { $ne: id } });
       if (slugExists) {
-        return res.status(400).json({ message: 'Content with this title already exists' });
+        return res.status(400).json({ message: 'Content with this title/slug already exists' });
       }
     }
     
@@ -195,6 +234,7 @@ export const updateContent = async (req: AuthRequest, res: Response) => {
         tags: tags || existingContent.tags,
         metadata: metadata || existingContent.metadata,
         featuredImage: featuredImage || existingContent.featuredImage,
+        updatedAt: new Date(),
       },
       { new: true }
     ).populate('author', 'username email');
@@ -225,8 +265,11 @@ export const deleteContent = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: 'Content not found' });
     }
     
-    // Check if user is author or admin
-    if (content.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    // Check if user is author or has required role
+    const isAuthor = content.author.toString() === req.user._id.toString();
+    const hasPermission = ['editor', 'admin'].includes(req.user.role);
+    
+    if (!isAuthor && !hasPermission) {
       return res.status(403).json({ message: 'Not authorized to delete this content' });
     }
     

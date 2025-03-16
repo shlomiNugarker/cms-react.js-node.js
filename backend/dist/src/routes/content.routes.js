@@ -33,7 +33,6 @@ const router = express_1.default.Router();
 // Public routes
 router.get('/', contentController.getAllContent);
 router.get('/slug/:slug', contentController.getContentBySlug);
-router.get('/id/:id', contentController.getContentById);
 router.get('/:id', contentController.getContentById);
 // Protected routes
 router.post('/', auth_middleware_1.authMiddleware, contentController.createContent);
