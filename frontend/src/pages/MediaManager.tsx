@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '@/config/axios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
@@ -9,8 +9,8 @@ import { useToast } from '@/components/ui/use-toast';
 interface MediaItem {
   _id: string;
   filename: string;
-  originalName: string;
-  mimeType: string;
+  originalname: string;
+  mimetype: string;
   size: number;
   url: string;
   createdAt: string;
@@ -53,9 +53,9 @@ const MediaManager: React.FC = () => {
         },
       });
       
-      if (response.data && Array.isArray(response.data.media)) {
-        setMediaItems(response.data.media);
-        setTotalPages(Math.ceil((response.data.total || 0) / 12));
+      if (response.data && Array.isArray(response.data.mediaFiles)) {
+        setMediaItems(response.data.mediaFiles);
+        setTotalPages(response.data.totalPages || 1);
       } else {
         setMediaItems([]);
         setTotalPages(1);
@@ -80,37 +80,77 @@ const MediaManager: React.FC = () => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     
-    const formData = new FormData();
-    for (let i = 0; i < files.length; i++) {
-      formData.append('files', files[i]);
+    // Check file types and sizes
+    const maxSize = 10 * 1024 * 1024; // 10MB (matching backend limit)
+    const allowedTypes = [
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
+      'video/mp4', 'video/webm', 'video/ogg',
+      'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'application/zip', 'application/x-rar-compressed',
+      'text/plain', 'text/csv'
+    ];
+    
+    const invalidFiles = Array.from(files).filter(
+      file => !allowedTypes.includes(file.type) || file.size > maxSize
+    );
+    
+    if (invalidFiles.length > 0) {
+      setError('Invalid files detected. Please check file types and ensure each file is under 10MB.');
+      toast({
+        title: "Invalid Files",
+        description: "Please check file types and ensure each file is under 10MB.",
+        variant: "destructive",
+      });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
     }
+    
+    const formData = new FormData();
+    formData.append('file', files[0]); // Upload one file at a time
     
     try {
       setUploading(true);
       setError('');
       
-      await axios.post('/api/media/upload', formData, {
+      const response = await axios.post('/api/media/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || progressEvent.loaded));
+          console.log('Upload progress:', percentCompleted);
+          toast({
+            title: "Uploading...",
+            description: `Upload progress: ${percentCompleted}%`,
+          });
+        },
       });
       
-      toast({
-        title: "Upload Successful",
-        description: `${files.length} file(s) uploaded successfully.`,
-      });
-      
-      fetchMedia();
+      if (response.data) {
+        toast({
+          title: "Upload Successful",
+          description: "File uploaded successfully.",
+        });
+        
+        fetchMedia();
+      } else {
+        throw new Error('Upload failed');
+      }
       
       // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
-    } catch (err) {
-      setError('Failed to upload files');
+    } catch (err: any) {
+      console.error('Upload error:', err);
+      setError(err.response?.data?.message || 'Failed to upload files. Please try again.');
       toast({
         title: "Upload Failed",
-        description: "Failed to upload files. Please try again.",
+        description: err.response?.data?.message || "Failed to upload files. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -225,21 +265,21 @@ const MediaManager: React.FC = () => {
                   onClick={() => toggleSelect(item._id)}
                 >
                   <div className="aspect-w-16 aspect-h-9 bg-gray-100">
-                    {item.mimeType.startsWith('image/') ? (
+                    {item.mimetype && item.mimetype.startsWith('image/') ? (
                       <img 
                         src={item.url} 
-                        alt={item.originalName} 
+                        alt={item.originalname} 
                         className="object-cover w-full h-48"
                       />
                     ) : (
                       <div className="flex items-center justify-center h-48 bg-gray-200">
-                        <span className="text-gray-500">{item.mimeType}</span>
+                        <span className="text-gray-500">{item.mimetype || 'Unknown file type'}</span>
                       </div>
                     )}
                   </div>
                   <div className="p-4">
-                    <h3 className="font-medium text-gray-900 truncate" title={item.originalName}>
-                      {item.originalName}
+                    <h3 className="font-medium text-gray-900 truncate" title={item.originalname}>
+                      {item.originalname}
                     </h3>
                     <p className="text-sm text-gray-500">
                       {formatFileSize(item.size)} • {new Date(item.createdAt).toLocaleDateString()}

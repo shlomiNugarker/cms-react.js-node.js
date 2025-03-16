@@ -1,4 +1,4 @@
-import { httpService } from "./http.service";
+import axios from '@/config/axios';
 
 export const authService = {
   login,
@@ -8,27 +8,25 @@ export const authService = {
 };
 
 async function login(email: string, password: string) {
-  const user = await httpService.post("/api/auth/login", { email, password });
-  localStorage.setItem("token", user.token);
-  return user;
+  const response = await axios.post("/api/auth/login", { email, password });
+  localStorage.setItem("token", response.data.token);
+  return response.data;
 }
 
 async function register(name: string, email: string, password: string) {
-  return httpService.post("/api/auth/register", {
+  const response = await axios.post("/api/auth/register", {
     name,
     email,
     password,
   });
+  return response.data;
 }
 
 async function logout() {
-  try {
-    localStorage.removeItem("token");
-  } catch (error) {
-    console.error("Error removing token:", error);
-  }
+  localStorage.removeItem("token");
 }
 
 async function getUser() {
-  return httpService.get("/api/auth/me", true);
+  const response = await axios.get("/api/auth/me");
+  return response.data;
 }
