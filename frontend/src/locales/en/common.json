@@ -15,5 +15,6 @@
   "actions": "Actions",
   "delete": "Delete",
   "activate": "Activate",
-  "deactivate": "Deactivate"
+  "deactivate": "Deactivate",
+  "search": "Search"
 } 

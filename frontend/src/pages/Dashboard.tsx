@@ -1,16 +1,20 @@
-import React from "react";
-import { Link } from "react-router";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { useTranslation } from "react-i18next";
 
-const Dashboard: React.FC = () => {
-  return (
-    <div className="p-4 space-y-4 flex flex-col items-center justify-center text-center">
-      <h1>Dashboard</h1>
-      <p>Welcome to the dashboard!</p>
-      <Link to={"/"} className="underline">
-        Go to Home
-      </Link>
-    </div>
-  );
+const Dashboard = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { t } = useTranslation("dashboard");
+
+  useEffect(() => {
+    if (user?.role === "admin") {
+      navigate("/admin/users");
+    }
+  }, [user, navigate]);
+
+  return <h1>{t("dashboard")}</h1>;
 };
 
 export default Dashboard;

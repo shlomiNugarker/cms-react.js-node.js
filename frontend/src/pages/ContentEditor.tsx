@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import { useTranslation } from 'react-i18next';
 
 interface ContentData {
   _id?: string;
@@ -21,6 +22,7 @@ const ContentEditor: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation(['dashboard']);
   const isEditMode = !!id;
 
   const [formData, setFormData] = useState<ContentData>({
@@ -52,7 +54,7 @@ const ContentEditor: React.FC = () => {
       setFormData(response.data);
       setLoading(false);
     } catch (err) {
-      setError('Failed to fetch content');
+      setError(t('failed_fetch_content'));
       setLoading(false);
     }
   };
@@ -80,35 +82,35 @@ const ContentEditor: React.FC = () => {
       if (isEditMode) {
         await axios.put(`/api/content/${id}`, formData);
         toast({
-          title: "Content Updated",
-          description: "Content has been successfully updated.",
+          title: t('content_updated_title'),
+          description: t('content_updated_desc'),
         });
       } else {
         await axios.post('/api/content', formData);
         toast({
-          title: "Content Created",
-          description: "New content has been successfully created.",
+          title: t('content_created_title'),
+          description: t('content_created_desc'),
         });
       }
       
       setSaving(false);
       navigate('/admin/content');
     } catch (err) {
-      setError('Failed to save content');
+      setError(t('failed_save_content'));
       setSaving(false);
     }
   };
 
   if (loading) {
-    return <div className="container mx-auto p-4 text-center">Loading...</div>;
+    return <div className="container mx-auto p-4 text-center">{t('loading')}</div>;
   }
 
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">{isEditMode ? 'Edit Content' : 'Create New Content'}</h1>
+        <h1 className="text-2xl font-bold">{isEditMode ? t('edit_content') : t('create_new_content')}</h1>
         <Button variant="outline" onClick={() => navigate('/admin/content')}>
-          Back to Content List
+          {t('back_to_content_list')}
         </Button>
       </div>
       
@@ -122,19 +124,19 @@ const ContentEditor: React.FC = () => {
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 gap-6">
             <div className="space-y-2">
-              <label htmlFor="title" className="text-sm font-medium">Title</label>
+              <label htmlFor="title" className="text-sm font-medium">{t('title')}</label>
               <Input
                 id="title"
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
-                placeholder="Content title"
+                placeholder={t('title')}
                 required
               />
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="slug" className="text-sm font-medium">Slug</label>
+              <label htmlFor="slug" className="text-sm font-medium">{t('slug')}</label>
               <div className="flex gap-2">
                 <Input
                   id="slug"
@@ -145,13 +147,13 @@ const ContentEditor: React.FC = () => {
                   required
                 />
                 <Button type="button" variant="outline" onClick={generateSlug}>
-                  Generate
+                  {t('generate')}
                 </Button>
               </div>
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="contentType" className="text-sm font-medium">Content Type</label>
+              <label htmlFor="contentType" className="text-sm font-medium">{t('content_type')}</label>
               <select
                 id="contentType"
                 name="contentType"
@@ -160,27 +162,27 @@ const ContentEditor: React.FC = () => {
                 className="w-full p-2 border rounded-md"
                 required
               >
-                <option value="page">Page</option>
-                <option value="post">Post</option>
-                <option value="product">Product</option>
+                <option value="page">{t('page')}</option>
+                <option value="post">{t('post')}</option>
+                <option value="product">{t('product')}</option>
               </select>
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="content" className="text-sm font-medium">Content</label>
+              <label htmlFor="content" className="text-sm font-medium">{t('content_field')}</label>
               <Textarea
                 id="content"
                 name="content"
                 value={formData.content}
                 onChange={handleChange}
                 rows={10}
-                placeholder="Enter content here..."
+                placeholder={t('content_field')}
                 required
               />
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="status" className="text-sm font-medium">Status</label>
+              <label htmlFor="status" className="text-sm font-medium">{t('status')}</label>
               <select
                 id="status"
                 name="status"
@@ -189,8 +191,8 @@ const ContentEditor: React.FC = () => {
                 className="w-full p-2 border rounded-md"
                 required
               >
-                <option value="draft">Draft</option>
-                <option value="published">Published</option>
+                <option value="draft">{t('draft')}</option>
+                <option value="published">{t('published')}</option>
               </select>
             </div>
             
@@ -200,10 +202,10 @@ const ContentEditor: React.FC = () => {
                 variant="outline"
                 onClick={() => navigate('/admin/content')}
               >
-                Cancel
+                {t('cancel')}
               </Button>
               <Button type="submit" disabled={saving}>
-                {saving ? 'Saving...' : isEditMode ? 'Update Content' : 'Create Content'}
+                {saving ? t('saving') : isEditMode ? t('update_content') : t('create_content')}
               </Button>
             </div>
           </div>

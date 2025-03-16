@@ -1,10 +1,12 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 const Home = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation("common");
 
   useEffect(() => {
     if (!user) return;
@@ -14,7 +16,7 @@ const Home = () => {
     }
   }, [user, navigate]);
 
-  return <h1>Welcome to Home Page</h1>;
+  return <h1>{t("home_welcome")}</h1>;
 };
 
 export default Home;
