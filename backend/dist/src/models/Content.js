@@ -72,9 +72,37 @@ const ContentSchema = new mongoose_1.Schema({
         of: String,
         default: new Map(),
     },
+    // SEO Fields
+    seo: {
+        metaTitle: String,
+        metaDescription: String,
+        metaKeywords: [String],
+        ogTitle: String,
+        ogDescription: String,
+        ogImage: String,
+        twitterTitle: String,
+        twitterDescription: String,
+        twitterImage: String,
+        canonicalUrl: String,
+        noIndex: {
+            type: Boolean,
+            default: false
+        },
+        structuredData: String,
+    },
+    // Layout Fields
+    layout: String,
+    order: {
+        type: Number,
+        default: 0
+    },
+    parent: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'Content'
+    }
 }, {
     timestamps: true,
 });
 // Create text index for search functionality
-ContentSchema.index({ title: 'text', content: 'text', tags: 'text' });
+ContentSchema.index({ title: 'text', content: 'text', tags: 'text', 'seo.metaKeywords': 'text' });
 exports.default = mongoose_1.default.model('Content', ContentSchema);

@@ -33,5 +33,10 @@
   "unauthorized": "אינך מורשה לצפות בדף זה",
   "trainee_dashboard": "לוח בקרה של תלמיד",
   "admin_dashboard": "לוח בקרה של מנהל",
-  "content_management": "ניהול תוכן"
+  "content_management": "ניהול תוכן",
+  "dashboard": "לוח בקרה",
+  "users": "משתמשים",
+  "content": "תוכן",
+  "media": "מדיה",
+  "seo": "קידום אתרים"
 }

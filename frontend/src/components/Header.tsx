@@ -28,13 +28,28 @@ const Header = () => {
       roles: [""],
     },
     {
-      label: t("admin_dashboard"),
+      label: t("dashboard"),
+      path: "/dashboard",
+      roles: ["admin"],
+    },
+    {
+      label: t("users"),
       path: "/admin/users",
       roles: ["admin"],
     },
     {
-      label: t("content_management"),
+      label: t("content"),
       path: "/admin/content",
+      roles: ["admin"],
+    },
+    {
+      label: t("media"),
+      path: "/admin/media",
+      roles: ["admin"],
+    },
+    {
+      label: t("seo"),
+      path: "/admin/seo",
       roles: ["admin"],
     },
   ];

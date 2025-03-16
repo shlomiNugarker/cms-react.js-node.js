@@ -11,6 +11,8 @@ import authRoutes from "./src/routes/auth.routes";
 import contentRoutes from "./src/routes/content.routes";
 import categoryRoutes from "./src/routes/category.routes";
 import mediaRoutes from "./src/routes/media.routes";
+import menuRoutes from "./src/routes/menu.routes";
+import siteSettingsRoutes from "./src/routes/siteSettings.routes";
 
 dotenv.config();
 
@@ -42,6 +44,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/content", contentRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/media", mediaRoutes);
+app.use("/api/menus", menuRoutes);
+app.use("/api/site-settings", siteSettingsRoutes);
 
 // Serve uploaded files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

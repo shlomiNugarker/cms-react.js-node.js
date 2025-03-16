@@ -16,6 +16,8 @@ const auth_routes_1 = __importDefault(require("./src/routes/auth.routes"));
 const content_routes_1 = __importDefault(require("./src/routes/content.routes"));
 const category_routes_1 = __importDefault(require("./src/routes/category.routes"));
 const media_routes_1 = __importDefault(require("./src/routes/media.routes"));
+const menu_routes_1 = __importDefault(require("./src/routes/menu.routes"));
+const siteSettings_routes_1 = __importDefault(require("./src/routes/siteSettings.routes"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
@@ -38,6 +40,8 @@ app.use("/api/users", user_routes_1.default);
 app.use("/api/content", content_routes_1.default);
 app.use("/api/categories", category_routes_1.default);
 app.use("/api/media", media_routes_1.default);
+app.use("/api/menus", menu_routes_1.default);
+app.use("/api/site-settings", siteSettings_routes_1.default);
 // Serve uploaded files
 app.use("/uploads", express_1.default.static(path_1.default.join(__dirname, "uploads")));
 // Serve static files

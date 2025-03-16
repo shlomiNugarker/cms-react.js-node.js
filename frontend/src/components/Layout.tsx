@@ -3,13 +3,13 @@ import Header from "@/components/Header";
 
 const Layout = () => {
   const location = useLocation();
-
   const hideHeaderRoutes = ["/login", "/register"];
+  const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
 
   return (
     <div className="flex flex-col min-h-screen">
-      {!hideHeaderRoutes.includes(location.pathname) && <Header />}
-      <main className="flex-grow">
+      {shouldShowHeader && <Header />}
+      <main className="flex-grow container mx-auto px-4 py-8">
         <Outlet />
       </main>
     </div>
