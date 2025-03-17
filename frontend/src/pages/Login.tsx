@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState("test@example.com");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("shlomin1231@gmail.com");
+  const [password, setPassword] = useState("854350");
   const [error, setError] = useState("");
   const { t } = useTranslation(["auth", "common"]);
   const { login } = useAuth();

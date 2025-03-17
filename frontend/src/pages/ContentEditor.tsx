@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { httpService } from '@/services/http.service';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -50,8 +50,8 @@ const ContentEditor: React.FC = () => {
   const fetchContent = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/content/${id}`);
-      setFormData(response.data);
+      const response = await httpService.get(`/api/content/${id}`, true);
+      setFormData(response);
       setLoading(false);
     } catch (err) {
       setError(t('failed_fetch_content'));
@@ -80,13 +80,13 @@ const ContentEditor: React.FC = () => {
       setSaving(true);
       
       if (isEditMode) {
-        await axios.put(`/api/content/${id}`, formData);
+        await httpService.put(`/api/content/${id}`, formData, true);
         toast({
           title: t('content_updated_title'),
           description: t('content_updated_desc'),
         });
       } else {
-        await axios.post('/api/content', formData);
+        await httpService.post('/api/content', formData, true);
         toast({
           title: t('content_created_title'),
           description: t('content_created_desc'),

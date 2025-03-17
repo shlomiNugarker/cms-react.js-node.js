@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from '@/config/axios';
+import { httpService } from '@/services/http.service';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
@@ -47,28 +47,22 @@ const MediaManager: React.FC = () => {
       setLoading(true);
       setError('');
       
-      const response = await axios.get('/api/media', {
-        params: {
-          page: currentPage,
-          limit: 12,
-          search: searchTerm
-        }
-      });
+      const response = await httpService.get(`/api/media?page=${currentPage}&limit=12&search=${searchTerm}`, true);
       
-      console.log('Server response:', response.data);
+      console.log('Server response:', response);
       
-      if (response.data) {
-        if (Array.isArray(response.data.items)) {
-          setMediaItems(response.data.items);
-          setTotalPages(response.data.totalPages || 1);
-        } else if (Array.isArray(response.data)) {
-          setMediaItems(response.data);
+      if (response) {
+        if (Array.isArray(response.items)) {
+          setMediaItems(response.items);
+          setTotalPages(response.totalPages || 1);
+        } else if (Array.isArray(response)) {
+          setMediaItems(response);
           setTotalPages(1);
-        } else if (Array.isArray(response.data.mediaFiles)) {
-          setMediaItems(response.data.mediaFiles);
-          setTotalPages(response.data.totalPages || 1);
+        } else if (Array.isArray(response.mediaFiles)) {
+          setMediaItems(response.mediaFiles);
+          setTotalPages(response.totalPages || 1);
         } else {
-          console.log('Server response format:', response.data);
+          console.log('Server response format:', response);
           setMediaItems([]);
           setTotalPages(1);
           setError(t('no_media_found', { ns: 'dashboard' }));
@@ -100,17 +94,29 @@ const MediaManager: React.FC = () => {
     const formData = new FormData();
     
     files.forEach(file => {
-      formData.append('files', file);
+      formData.append('file', file);
     });
     
     try {
       setUploading(true);
       
-      await axios.post('/api/media/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+      // For file uploads, we'll need to use fetch directly since httpService
+      // is configured for JSON data
+      const token = localStorage.getItem("token");
+      const headers: HeadersInit = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`${process.env.NODE_ENV === "production" ? "" : "http://localhost:3030"}/api/media/upload`, {
+        method: 'POST',
+        headers,
+        body: formData
       });
+      
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
       
       toast({
         title: t('upload_success', { ns: 'dashboard' }),
@@ -138,9 +144,7 @@ const MediaManager: React.FC = () => {
     if (selectedItems.length === 0) return;
     
     try {
-      await axios.delete('/api/media', {
-        data: { ids: selectedItems }
-      });
+      await httpService.post('/api/media/delete', { ids: selectedItems }, true);
       
       toast({
         title: t('delete_success', { ns: 'dashboard' }),

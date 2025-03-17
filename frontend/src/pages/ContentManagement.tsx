@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { httpService } from '@/services/http.service';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -42,15 +42,10 @@ const ContentManagement: React.FC = () => {
   const fetchContents = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/content', {
-        params: {
-          page: currentPage,
-          limit: 10
-        }
-      });
+      const response = await httpService.get(`/api/content?page=${currentPage}&limit=10`, true);
       
-      setContents(response.data.contents || []);
-      setTotalPages(response.data.totalPages || 1);
+      setContents(response.contents || []);
+      setTotalPages(response.totalPages || 1);
       setLoading(false);
     } catch (err) {
       setError(t('failed_fetch_data', { ns: 'common' }));
@@ -100,7 +95,7 @@ const ContentManagement: React.FC = () => {
                           </Button>
                           <Button variant="destructive" size="sm" onClick={() => {
                             if (window.confirm(t('confirm_delete_content', { ns: 'dashboard', title: content.title }))) {
-                              axios.delete(`/api/content/${content._id}`)
+                              httpService.del(`/api/content/${content._id}`, true)
                                 .then(() => fetchContents())
                                 .catch(() => setError(t('failed_fetch_data', { ns: 'common' })));
                             }
