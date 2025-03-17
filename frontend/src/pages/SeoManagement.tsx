@@ -4,7 +4,6 @@ import { httpService } from '@/services/http.service';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/components/ui/use-toast';
 import { useTranslation } from 'react-i18next';
 
 interface Content {
@@ -27,7 +26,6 @@ interface Content {
 const SeoManagement: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { t } = useTranslation(['dashboard', 'common']);
   
   const [contents, setContents] = useState<Content[]>([]);

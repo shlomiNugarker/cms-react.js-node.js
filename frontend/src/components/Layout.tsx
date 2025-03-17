@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from "react-router-dom";
 import Header from "@/components/Header";
+import { Toaster } from "@/components/ui/sonner";
 
 const Layout = () => {
   const location = useLocation();
@@ -12,6 +13,7 @@ const Layout = () => {
       <main className="flex-grow container mx-auto px-4 py-8">
         <Outlet />
       </main>
+      <Toaster />
     </div>
   );
 };

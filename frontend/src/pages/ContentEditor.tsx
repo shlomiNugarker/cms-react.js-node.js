@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/components/ui/use-toast';
 import { useTranslation } from 'react-i18next';
+import { toast } from "sonner";
 
 interface ContentData {
   _id?: string;
@@ -21,7 +21,6 @@ const ContentEditor: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { toast } = useToast();
   const { t } = useTranslation(['dashboard']);
   const isEditMode = !!id;
 
@@ -81,16 +80,10 @@ const ContentEditor: React.FC = () => {
       
       if (isEditMode) {
         await httpService.put(`/api/content/${id}`, formData, true);
-        toast({
-          title: t('content_updated_title'),
-          description: t('content_updated_desc'),
-        });
+        toast.success(t('content_updated_title'));
       } else {
         await httpService.post('/api/content', formData, true);
-        toast({
-          title: t('content_created_title'),
-          description: t('content_created_desc'),
-        });
+        toast.success(t('content_created_title'));
       }
       
       setSaving(false);
@@ -98,6 +91,7 @@ const ContentEditor: React.FC = () => {
     } catch (err) {
       setError(t('failed_save_content'));
       setSaving(false);
+      toast.error(t('error_saving_content'));
     }
   };
 

@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 const Register: React.FC = () => {
   const [name, setName] = useState("");
@@ -16,7 +16,6 @@ const Register: React.FC = () => {
   const { t } = useTranslation(["auth", "common"]);
   const { register } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,12 +30,11 @@ const Register: React.FC = () => {
     
     try {
       await register(name, email, password);
-      toast({
-        title: t("register_success", { ns: "auth" }),
-      });
+      toast.success(t("register_success", { ns: "auth" }));
       navigate("/login");
     } catch (err) {
       setError((err as Error)?.message || t("registration_failed", { ns: "auth" }));
+      toast.error(t("registration_failed", { ns: "auth" }));
     } finally {
       setLoading(false);
     }

@@ -4,31 +4,29 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState("shlomin1231@gmail.com");
-  const [password, setPassword] = useState("854350");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const { t } = useTranslation(["auth", "common"]);
+  const { t } = useTranslation();
   const { login } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError(null);
     setLoading(true);
 
     try {
       await login(email, password);
-      toast({
-        title: t("login_success", { ns: "auth" }),
-      });
+      toast.success(t("login_success", { ns: "auth" }));
       navigate("/");
     } catch (err) {
       setError((err as Error)?.message || t("login_failed", { ns: "auth" }));
+      toast.error(t("login_failed", { ns: "auth" }));
     } finally {
       setLoading(false);
     }

@@ -7,8 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/components/ui/use-toast';
 import { useTranslation } from 'react-i18next';
+import { toast } from "sonner";
 
 interface Content {
   _id: string;
@@ -31,7 +31,6 @@ const SeoEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { toast } = useToast();
   const { t } = useTranslation(['dashboard', 'common']);
   
   const [content, setContent] = useState<Content | null>(null);
@@ -106,14 +105,13 @@ const SeoEdit: React.FC = () => {
       
       await httpService.put(`/api/content/${id}`, updatedContent, true);
       
-      toast({
-        title: t('seo_updated', { ns: 'dashboard' }),
-        description: t('seo_updated_desc', { ns: 'dashboard' }),
-      });
+      toast.success(t('seo_updated_desc', { ns: 'dashboard' }));
       
       setSaving(false);
       navigate('/admin/seo');
-    } catch (err) {
+    } catch (error) {
+      console.error('Error saving SEO data:', error);
+      toast.error(t('error_saving_seo'));
       setError(t('failed_update_seo', { ns: 'dashboard' }));
       setSaving(false);
     }

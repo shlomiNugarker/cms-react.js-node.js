@@ -4,8 +4,8 @@ import { httpService } from '@/services/http.service';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/components/ui/use-toast';
 import { useTranslation } from 'react-i18next';
+import { toast } from "sonner";
 
 interface MediaItem {
   _id: string;
@@ -20,7 +20,6 @@ interface MediaItem {
 const MediaManager: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { t } = useTranslation(['dashboard', 'common']);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -118,8 +117,7 @@ const MediaManager: React.FC = () => {
         throw new Error('Upload failed');
       }
       
-      toast({
-        title: t('upload_success', { ns: 'dashboard' }),
+      toast.success(t('upload_success', { ns: 'dashboard' }), {
         description: files.length > 1 
           ? `${files.length} ${t('files_uploaded', { ns: 'dashboard' })}` 
           : files[0].name,
@@ -132,10 +130,7 @@ const MediaManager: React.FC = () => {
       
       fetchMedia();
     } catch (err) {
-      toast({
-        title: t('failed_upload_media', { ns: 'dashboard' }),
-        variant: 'destructive'
-      });
+      toast.error(t('failed_upload_media', { ns: 'dashboard' }));
       setUploading(false);
     }
   };
@@ -146,17 +141,12 @@ const MediaManager: React.FC = () => {
     try {
       await httpService.post('/api/media/delete', { ids: selectedItems }, true);
       
-      toast({
-        title: t('delete_success', { ns: 'dashboard' }),
-      });
+      toast.success(t('delete_success', { ns: 'dashboard' }));
       
       setSelectedItems([]);
       fetchMedia();
     } catch (err) {
-      toast({
-        title: t('failed_delete_media', { ns: 'dashboard' }),
-        variant: 'destructive'
-      });
+      toast.error(t('failed_delete_media', { ns: 'dashboard' }));
     }
   };
   
