@@ -10,10 +10,9 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
 }
 
@@ -23,52 +22,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(() =>
-    localStorage.getItem("token")
-  );
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const verifyUser = async () => {
-      if (!token) {
-        setLoading(false);
-        return;
-      }
       try {
         const response = await authService.getUser();
         setUser(response.user);
       } catch (error) {
         console.error("Authentication error:", error);
-        setToken(null);
-        localStorage.removeItem("token");
       } finally {
         setLoading(false);
       }
     };
 
     verifyUser();
-  }, [token]);
+  }, []);
 
   const login = async (email: string, password: string): Promise<void> => {
     try {
       const response = await authService.login(email, password);
-      if (!response.token) {
-        throw new Error("Login failed: No token received");
-      }
-      
-      setToken(response.token);
       setUser(response.user);
-      // Token is already set in localStorage by the auth service
     } catch (error) {
       console.error("Login error:", error);
       throw error;
     }
   };
 
-  const logout = () => {
-    authService.logout();
-    setToken(null);
-    setUser(null);
+  const logout = async () => {
+    try {
+      await authService.logout();
+      setUser(null);
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   const register = async (name: string, email: string, password: string) => {
@@ -82,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <AuthContext.Provider
-      value={{ user, token, loading, login, logout, register }}
+      value={{ user, loading, login, logout, register }}
     >
       {children}
     </AuthContext.Provider>

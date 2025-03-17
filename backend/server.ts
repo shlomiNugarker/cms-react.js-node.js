@@ -7,6 +7,7 @@ import http from "http";
 import helmet from "helmet";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
+import cookieParser from "cookie-parser";
 import { connectDB } from "./src/database/db";
 import { config } from "./src/config";
 import userRoutes from "./src/routes/user.routes";
@@ -35,6 +36,7 @@ app.use(
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 const corsOptions = {
   origin: config.allowedOrigins,

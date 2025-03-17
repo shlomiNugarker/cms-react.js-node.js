@@ -9,7 +9,6 @@ export const authService = {
 
 async function login(email: string, password: string) {
   const response = await httpService.post("/api/auth/login", { email, password });
-  localStorage.setItem("token", response.token);
   return response;
 }
 
@@ -23,7 +22,7 @@ async function register(name: string, email: string, password: string) {
 }
 
 async function logout() {
-  localStorage.removeItem("token");
+  await httpService.post("/api/auth/logout");
 }
 
 async function getUser() {

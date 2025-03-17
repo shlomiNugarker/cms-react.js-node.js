@@ -23,11 +23,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAuthenticatedUser = exports.resetPassword = exports.forgotPassword = exports.registerUser = exports.loginUser = void 0;
+exports.getAuthenticatedUser = exports.logoutUser = exports.resetPassword = exports.forgotPassword = exports.registerUser = exports.loginUser = void 0;
 const User_1 = require("../models/User");
 const jwt_1 = require("../utils/jwt");
 const crypto_1 = __importDefault(require("crypto"));
 const nodemailer_1 = __importDefault(require("nodemailer"));
+const config_1 = require("../config");
 const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email, password } = req.body;
@@ -37,9 +38,16 @@ const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }
         const token = (0, jwt_1.generateToken)(user._id.toString());
         const _a = user.toObject(), { password: _ } = _a, safeUser = __rest(_a, ["password"]);
+        // Set HTTP-only cookie
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: config_1.config.isProduction,
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+        });
         res
             .status(200)
-            .json({ message: "Login successful", token, user: safeUser });
+            .json({ message: "Login successful", user: safeUser });
     }
     catch (error) {
         console.error("❌ Error in loginUser:", error);
@@ -123,23 +131,30 @@ const resetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.resetPassword = resetPassword;
+const logoutUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        res.cookie("token", "", {
+            httpOnly: true,
+            expires: new Date(0),
+            secure: config_1.config.isProduction,
+            sameSite: "strict",
+        });
+        res.status(200).json({ message: "Logged out successfully" });
+    }
+    catch (error) {
+        console.error("❌ Error in logoutUser:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+exports.logoutUser = logoutUser;
 const getAuthenticatedUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        // Get the user from the request (set by authMiddleware)
+        const user = req.user;
+        if (!user) {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        const token = authHeader.split(" ")[1];
-        const decoded = (0, jwt_1.verifyToken)(token);
-        if (!decoded) {
-            return res.status(401).json({ message: "Invalid token" });
-        }
-        const user = yield User_1.User.findById(decoded.userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-        const _c = user.toObject(), { password } = _c, safeUser = __rest(_c, ["password"]);
-        res.status(200).json({ user: safeUser });
+        res.status(200).json({ user });
     }
     catch (error) {
         console.error("❌ Error in getAuthenticatedUser:", error);

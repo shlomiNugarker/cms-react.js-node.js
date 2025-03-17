@@ -5,12 +5,7 @@ const BASE_URL =
   process.env.NODE_ENV === "production" ? "" : "http://localhost:3030";
 
 function getAuthHeaders(secure: boolean) {
-  if (!secure) return { "Content-Type": "application/json" };
-  const token = localStorage.getItem("token");
-  return {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
+  return { "Content-Type": "application/json" };
 }
 
 async function request(
@@ -23,6 +18,7 @@ async function request(
     const options: RequestInit = {
       method,
       headers: getAuthHeaders(secure),
+      credentials: 'include',
     };
 
     if (data) {

@@ -12,6 +12,7 @@ const http_1 = __importDefault(require("http"));
 const helmet_1 = __importDefault(require("helmet"));
 const morgan_1 = __importDefault(require("morgan"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const db_1 = require("./src/database/db");
 const config_1 = require("./src/config");
 const user_routes_1 = __importDefault(require("./src/routes/user.routes"));
@@ -34,6 +35,7 @@ app.use((0, express_session_1.default)({
 }));
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
+app.use((0, cookie_parser_1.default)());
 const corsOptions = {
     origin: config_1.config.allowedOrigins,
     credentials: true,

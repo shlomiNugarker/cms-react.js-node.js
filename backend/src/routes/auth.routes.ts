@@ -5,6 +5,7 @@ import {
   getAuthenticatedUser,
   loginUser,
   registerUser,
+  logoutUser,
 } from "../controllers/auth.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
 
@@ -13,6 +14,8 @@ const router = Router();
 router.post("/login", loginUser);
 
 router.post("/register", registerUser);
+
+router.post("/logout", logoutUser);
 
 router.post("/forgot-password", forgotPassword);
 

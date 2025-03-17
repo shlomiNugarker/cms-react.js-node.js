@@ -6,13 +6,10 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3030';
 axios.defaults.baseURL = BASE_URL;
 axios.defaults.withCredentials = true;
 
-// Add a request interceptor to add the auth token
+// Add a request interceptor
 axios.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    // No need to manually add the token anymore as it will be sent via cookies
     return config;
   },
   (error) => {

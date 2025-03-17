@@ -3,6 +3,7 @@ import { User } from "../models/User";
 import { generateToken, verifyToken } from "../utils/jwt";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
+import { config } from "../config";
 
 export const loginUser = async (req: Request, res: Response) => {
   try {
@@ -15,9 +16,18 @@ export const loginUser = async (req: Request, res: Response) => {
     
     const token = generateToken((user._id as any).toString());
     const { password: _, ...safeUser } = user.toObject();
+    
+    // Set HTTP-only cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: config.isProduction, // Use secure in production
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+    });
+    
     res
       .status(200)
-      .json({ message: "Login successful", token, user: safeUser });
+      .json({ message: "Login successful", user: safeUser });
   } catch (error) {
     console.error("❌ Error in loginUser:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -113,27 +123,32 @@ export const resetPassword = async (req: Request, res: Response) => {
   }
 };
 
+export const logoutUser = async (req: Request, res: Response) => {
+  try {
+    res.cookie("token", "", {
+      httpOnly: true,
+      expires: new Date(0),
+      secure: config.isProduction,
+      sameSite: "strict",
+    });
+    
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.error("❌ Error in logoutUser:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export const getAuthenticatedUser = async (req: Request, res: Response) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    // Get the user from the request (set by authMiddleware)
+    const user = req.user;
+    
+    if (!user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const token = authHeader.split(" ")[1];
-
-    const decoded = verifyToken(token);
-    if (!decoded) {
-      return res.status(401).json({ message: "Invalid token" });
-    }
-
-    const user = await User.findById((decoded as any).userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const { password, ...safeUser } = user.toObject();
-    res.status(200).json({ user: safeUser });
+    res.status(200).json({ user });
   } catch (error) {
     console.error("❌ Error in getAuthenticatedUser:", error);
     res.status(500).json({ message: "Internal server error" });

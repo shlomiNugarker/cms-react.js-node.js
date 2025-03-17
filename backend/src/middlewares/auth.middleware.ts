@@ -11,11 +11,7 @@ export const authMiddleware = async (
   res: Response,
   next: NextFunction
 ) => {
-  let token = req.header("Authorization")?.replace("Bearer ", "");
-
-  if (!token && req.cookies) {
-    token = req.cookies["token"];
-  }
+  let token = req.cookies?.token;
 
   if (!token) {
     return res.status(401).json({ message: "Unauthorized, no token provided" });
