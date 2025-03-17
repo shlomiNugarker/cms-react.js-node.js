@@ -7,7 +7,7 @@ const user_controller_1 = require("../controllers/user.controller");
 const router = (0, express_1.Router)();
 router.get("/profile", auth_middleware_1.authMiddleware, user_controller_1.getProfile);
 router.patch("/profile", auth_middleware_1.authMiddleware, user_controller_1.updateProfile);
-router.delete("/:id", auth_middleware_1.authMiddleware, user_controller_1.deleteUser);
+router.delete("/:id", auth_middleware_1.authMiddleware, (0, role_middleware_1.roleMiddleware)(['admin']), user_controller_1.deleteUser);
 router.get("/all", auth_middleware_1.authMiddleware, (0, role_middleware_1.roleMiddleware)(["admin"]), user_controller_1.getAllUsers);
 router.put("/:id/role", auth_middleware_1.authMiddleware, (0, role_middleware_1.roleMiddleware)(["admin"]), user_controller_1.updateUserRole);
 exports.default = router;

@@ -29,13 +29,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const categoryController = __importStar(require("../controllers/category.controller"));
 const auth_middleware_1 = require("../middlewares/auth.middleware");
+const role_middleware_1 = require("../middlewares/role.middleware");
 const router = express_1.default.Router();
 // Public routes
 router.get('/', categoryController.getAllCategories);
 router.get('/id/:id', categoryController.getCategoryById);
 router.get('/slug/:slug', categoryController.getCategoryBySlug);
 // Protected routes (admin only)
-router.post('/', auth_middleware_1.authMiddleware, categoryController.createCategory);
-router.put('/:id', auth_middleware_1.authMiddleware, categoryController.updateCategory);
-router.delete('/:id', auth_middleware_1.authMiddleware, categoryController.deleteCategory);
+router.post('/', auth_middleware_1.authMiddleware, (0, role_middleware_1.roleMiddleware)(['admin']), categoryController.createCategory);
+router.put('/:id', auth_middleware_1.authMiddleware, (0, role_middleware_1.roleMiddleware)(['admin']), categoryController.updateCategory);
+router.delete('/:id', auth_middleware_1.authMiddleware, (0, role_middleware_1.roleMiddleware)(['admin']), categoryController.deleteCategory);
 exports.default = router;

@@ -29,9 +29,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const siteSettingsController = __importStar(require("../controllers/siteSettings.controller"));
 const auth_middleware_1 = require("../middlewares/auth.middleware");
+const role_middleware_1 = require("../middlewares/role.middleware");
 const router = express_1.default.Router();
 // Public route to get site settings
 router.get('/', siteSettingsController.getSiteSettings);
 // Protected route to update site settings (admin only)
-router.put('/', auth_middleware_1.authMiddleware, siteSettingsController.updateSiteSettings);
+router.put('/', auth_middleware_1.authMiddleware, (0, role_middleware_1.roleMiddleware)(['admin']), siteSettingsController.updateSiteSettings);
 exports.default = router;
