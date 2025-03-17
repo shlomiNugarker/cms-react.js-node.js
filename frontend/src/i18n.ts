@@ -8,6 +8,8 @@ import enAuth from "./locales/en/auth.json";
 import heAuth from "./locales/he/auth.json";
 import enDashboard from "./locales/en/dashboard.json";
 import heDashboard from "./locales/he/dashboard.json";
+import enForms from "./locales/en/forms.json";
+import heForms from "./locales/he/forms.json";
 
 i18n
   .use(Backend)
@@ -18,17 +20,19 @@ i18n
       en: {
         common: enCommon,
         auth: enAuth,
-        dashboard: enDashboard
+        dashboard: enDashboard,
+        forms: enForms
       },
       he: {
         common: heCommon,
         auth: heAuth,
-        dashboard: heDashboard
+        dashboard: heDashboard,
+        forms: heForms
       }
     },
     fallbackLng: "he",
     supportedLngs: ["en", "he"],
-    ns: ["common", "auth", "dashboard"],
+    ns: ["common", "auth", "dashboard", "forms"],
     defaultNS: "common",
     detection: {
       order: ["localStorage", "navigator"],

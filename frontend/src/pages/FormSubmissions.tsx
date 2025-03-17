@@ -17,7 +17,7 @@ interface FormSubmission {
 }
 
 const FormSubmissions: React.FC = () => {
-  const { t } = useTranslation(['common', 'dashboard', 'forms']);
+  const { t, i18n } = useTranslation(['forms', 'common']);
   const { user } = useAuth();
   const navigate = useNavigate();
   const [submissions, setSubmissions] = useState<FormSubmission[]>([]);
@@ -51,7 +51,7 @@ const FormSubmissions: React.FC = () => {
       setError('');
     } catch (err) {
       console.error(err);
-      setError(t('fetchError', { ns: 'forms' }));
+      setError(t('fetchError'));
     } finally {
       setLoading(false);
     }
@@ -92,12 +92,12 @@ const FormSubmissions: React.FC = () => {
         sub._id === id ? { ...sub, status: newStatus } : sub
       ));
       
-      setSuccessMessage(t('statusUpdated', { ns: 'forms' }));
+      setSuccessMessage(t('statusUpdated'));
       setTimeout(() => setSuccessMessage(''), 3000);
       setError('');
     } catch (err) {
       console.error(err);
-      setError(t('updateError', { ns: 'forms' }));
+      setError(t('updateError'));
       setTimeout(() => setError(''), 5000);
     } finally {
       setLoading(false);
@@ -105,19 +105,19 @@ const FormSubmissions: React.FC = () => {
   };
 
   const deleteSubmission = async (id: string) => {
-    if (!confirm(t('deleteConfirm', { ns: 'forms' }))) return;
+    if (!confirm(t('deleteConfirm'))) return;
     
     try {
       setLoading(true);
       await httpService.del(`/api/forms/${id}`, true);
       
       setSubmissions(submissions.filter(sub => sub._id !== id));
-      setSuccessMessage(t('deleted', { ns: 'forms' }));
+      setSuccessMessage(t('deleted'));
       setTimeout(() => setSuccessMessage(''), 3000);
       setError('');
     } catch (err) {
       console.error(err);
-      setError(t('deleteError', { ns: 'forms' }));
+      setError(t('deleteError'));
       setTimeout(() => setError(''), 5000);
     } finally {
       setLoading(false);
@@ -126,21 +126,21 @@ const FormSubmissions: React.FC = () => {
 
   const handleViewDetails = (submission: FormSubmission) => {
     alert(`
-${t('formDetails', { ns: 'forms' })}:
+${t('formDetails')}:
 
-${t('type', { ns: 'forms' })}: ${submission.formType}
-${t('name', { ns: 'forms' })}: ${submission.name}
-${t('email', { ns: 'forms' })}: ${submission.email}
-${t('phone', { ns: 'forms' })}: ${submission.phone || t('notProvided', { ns: 'forms' })}
-${t('date', { ns: 'forms' })}: ${new Date(submission.createdAt).toLocaleString()}
+${t('type')}: ${submission.formType}
+${t('name')}: ${submission.name}
+${t('email')}: ${submission.email}
+${t('phone')}: ${submission.phone || t('notProvided')}
+${t('date')}: ${new Date(submission.createdAt).toLocaleString()}
 
-${t('message', { ns: 'forms' })}:
+${t('message')}:
 ${submission.message}
     `);
   };
 
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString();
+    return new Date(dateString).toLocaleDateString(i18n.language);
   };
 
   const getUniqueFormTypes = (): string[] => {
@@ -152,7 +152,7 @@ ${submission.message}
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">{t('submissionsTitle', { ns: 'forms' })}</h1>
+      <h1 className="text-2xl font-bold mb-6">{t('submissionsTitle')}</h1>
       
       {successMessage && (
         <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
@@ -170,14 +170,14 @@ ${submission.message}
       <div className="bg-gray-50 p-4 rounded-lg mb-6 flex flex-wrap gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t('filterByType', { ns: 'forms' })}
+            {t('filterByType')}
           </label>
           <select 
             className="rounded border-gray-300 px-3 py-2"
             value={filter.formType}
             onChange={(e) => setFilter({...filter, formType: e.target.value})}
           >
-            <option value="all">{t('allTypes', { ns: 'forms' })}</option>
+            <option value="all">{t('allTypes')}</option>
             {getUniqueFormTypes().map(type => (
               <option key={type} value={type}>{type}</option>
             ))}
@@ -186,29 +186,29 @@ ${submission.message}
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t('filterByStatus', { ns: 'forms' })}
+            {t('filterByStatus')}
           </label>
           <select 
             className="rounded border-gray-300 px-3 py-2"
             value={filter.status}
             onChange={(e) => setFilter({...filter, status: e.target.value})}
           >
-            <option value="all">{t('allStatuses', { ns: 'forms' })}</option>
-            <option value="new">{t('statusNew', { ns: 'forms' })}</option>
-            <option value="read">{t('statusRead', { ns: 'forms' })}</option>
-            <option value="replied">{t('statusReplied', { ns: 'forms' })}</option>
-            <option value="archived">{t('statusArchived', { ns: 'forms' })}</option>
+            <option value="all">{t('allStatuses')}</option>
+            <option value="new">{t('statusNew')}</option>
+            <option value="read">{t('statusRead')}</option>
+            <option value="replied">{t('statusReplied')}</option>
+            <option value="archived">{t('statusArchived')}</option>
           </select>
         </div>
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t('search', { ns: 'forms' })}
+            {t('search')}
           </label>
           <input
             type="text"
             className="rounded border-gray-300 px-3 py-2"
-            placeholder={t('searchPlaceholder', { ns: 'forms' })}
+            placeholder={t('searchPlaceholder')}
             value={filter.searchQuery}
             onChange={(e) => setFilter({...filter, searchQuery: e.target.value})}
           />
@@ -217,9 +217,9 @@ ${submission.message}
 
       <div className="mb-4">
         <p className="text-gray-600">
-          {t('totalSubmissions', { ns: 'forms' })}: <span className="font-semibold">{filteredSubmissions.length}</span>
+          {t('totalSubmissions')}: <span className="font-semibold">{filteredSubmissions.length}</span>
           {filter.formType !== 'all' || filter.status !== 'all' || filter.searchQuery ? 
-            ` (${t('filtered', { ns: 'forms' })})` : ''}
+            ` (${t('filtered')})` : ''}
         </p>
       </div>
       
@@ -227,11 +227,11 @@ ${submission.message}
         <table className="min-w-full bg-white border border-gray-300">
           <thead>
             <tr className="bg-gray-100">
-              <th className="px-6 py-3 border-b text-center">{t('date', { ns: 'forms' })}</th>
-              <th className="px-6 py-3 border-b text-center">{t('type', { ns: 'forms' })}</th>
-              <th className="px-6 py-3 border-b text-center">{t('name', { ns: 'forms' })}</th>
-              <th className="px-6 py-3 border-b text-center">{t('email', { ns: 'forms' })}</th>
-              <th className="px-6 py-3 border-b text-center">{t('status', { ns: 'forms' })}</th>
+              <th className="px-6 py-3 border-b text-center">{t('date')}</th>
+              <th className="px-6 py-3 border-b text-center">{t('type')}</th>
+              <th className="px-6 py-3 border-b text-center">{t('name')}</th>
+              <th className="px-6 py-3 border-b text-center">{t('email')}</th>
+              <th className="px-6 py-3 border-b text-center">{t('status')}</th>
               <th className="px-6 py-3 border-b text-center">{t('actions', { ns: 'common' })}</th>
             </tr>
           </thead>
@@ -256,10 +256,10 @@ ${submission.message}
                       className="rounded border-gray-300 text-sm"
                       disabled={loading}
                     >
-                      <option value="new">{t('statusNew', { ns: 'forms' })}</option>
-                      <option value="read">{t('statusRead', { ns: 'forms' })}</option>
-                      <option value="replied">{t('statusReplied', { ns: 'forms' })}</option>
-                      <option value="archived">{t('statusArchived', { ns: 'forms' })}</option>
+                      <option value="new">{t('statusNew')}</option>
+                      <option value="read">{t('statusRead')}</option>
+                      <option value="replied">{t('statusReplied')}</option>
+                      <option value="archived">{t('statusArchived')}</option>
                     </select>
                   </td>
                   <td className="px-6 py-4 border-b text-center">
@@ -269,7 +269,7 @@ ${submission.message}
                         className="text-blue-600 hover:text-blue-800 text-sm bg-blue-100 px-2 py-1 rounded"
                         disabled={loading}
                       >
-                        {t('viewDetails', { ns: 'forms' })}
+                        {t('viewDetails')}
                       </button>
                       <button
                         onClick={() => deleteSubmission(submission._id)}
@@ -285,7 +285,7 @@ ${submission.message}
             ) : (
               <tr>
                 <td colSpan={6} className="px-6 py-8 text-center text-gray-500 border-b">
-                  {t('noSubmissions', { ns: 'forms' })}
+                  {t('noSubmissions')}
                 </td>
               </tr>
             )}
