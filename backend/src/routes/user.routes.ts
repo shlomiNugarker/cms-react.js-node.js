@@ -15,7 +15,7 @@ router.get("/profile", authMiddleware, getProfile);
 
 router.patch("/profile", authMiddleware, updateProfile);
 
-router.delete("/:id", authMiddleware, deleteUser);
+router.delete("/:id", authMiddleware, roleMiddleware(['admin']), deleteUser);
 
 router.get("/all", authMiddleware, roleMiddleware(["admin"]), getAllUsers);
 

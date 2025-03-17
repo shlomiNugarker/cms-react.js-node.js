@@ -194,7 +194,7 @@ export const updateContent = async (req: AuthRequest, res: Response) => {
     
     // Check if user is author or has required role
     const isAuthor = existingContent.author.toString() === req.user._id.toString();
-    const hasPermission = ['editor', 'admin'].includes(req.user.role);
+    const hasPermission = ['admin'].includes(req.user.role);
     
     if (!isAuthor && !hasPermission) {
       return res.status(403).json({ message: 'Not authorized to update this content' });
