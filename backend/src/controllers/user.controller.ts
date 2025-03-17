@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { User } from "../models/User";
-import { deleteUserById, findUserByEmail } from "../services/user.service";
 
 export const getProfile = async (req: Request, res: Response) => {
   try {
@@ -45,7 +44,7 @@ export const deleteUser = async (req: Request, res: Response) => {
     // @ts-ignore
     const { id } = req.params;
 
-    const deletedUser = await deleteUserById(id);
+    const deletedUser = await User.findByIdAndDelete(id);
 
     if (!deletedUser) {
       return res.status(404).json({ message: "User not found" });

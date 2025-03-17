@@ -1,26 +1,19 @@
 import { Request, Response } from "express";
+import { User } from "../models/User";
 import { generateToken, verifyToken } from "../utils/jwt";
-import {
-  findUserByEmail,
-  createUser,
-  updateUserPassword,
-  updateUserResetToken,
-  findUserById,
-} from "../services/user.service";
-import bcrypt from "bcrypt";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
 
 export const loginUser = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-    const user = await findUserByEmail(email);
+    const user = await User.findOne({ email });
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!user || !(await user.comparePassword(password))) {
       return res.status(400).json({ message: "Invalid email or password" });
     }
-    // @ts-ignore
-    const token = generateToken(user._id.toString());
+    
+    const token = generateToken((user._id as any).toString());
     const { password: _, ...safeUser } = user.toObject();
     res
       .status(200)
@@ -35,14 +28,21 @@ export const registerUser = async (req: Request, res: Response) => {
   try {
     const { name, email, password } = req.body;
 
-    if (await findUserByEmail(email)) {
+    if (await User.findOne({ email })) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    const newUser = await createUser(name, email, password, "user");
+    const newUser = await User.create({
+      name,
+      email,
+      password,
+      role: "user"
+    });
+    
+    const { password: _, ...safeUser } = newUser.toObject();
     res
       .status(201)
-      .json({ message: "User registered successfully", user: newUser });
+      .json({ message: "User registered successfully", user: safeUser });
   } catch (error) {
     console.error("❌ Error in registerUser:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -52,18 +52,20 @@ export const registerUser = async (req: Request, res: Response) => {
 export const forgotPassword = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
-    const user = await findUserByEmail(email);
+    const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
 
     const resetToken = crypto.randomBytes(32).toString("hex");
-    await updateUserResetToken(
-      // @ts-ignore
-      user._id.toString(),
-      resetToken,
-      new Date(Date.now() + 3600000)
+    
+    await User.updateOne(
+      { _id: user._id as any },
+      {
+        resetPasswordToken: resetToken,
+        resetPasswordExpires: new Date(Date.now() + 3600000)
+      }
     );
 
     const transporter = nodemailer.createTransport({
@@ -89,23 +91,20 @@ export const resetPassword = async (req: Request, res: Response) => {
   try {
     const { token } = req.params;
     const { newPassword } = req.body;
-    const decoded = verifyToken(token);
-    if (!decoded) {
-      return res.status(401).json({ message: "Invalid token" });
-    }
-    const user = await findUserById((decoded as any).userId);
+    
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: new Date() }
+    });
 
-    if (
-      !user ||
-      !user.resetPasswordExpires ||
-      user.resetPasswordExpires < new Date()
-    ) {
+    if (!user) {
       return res.status(400).json({ message: "Invalid or expired token" });
     }
-    // @ts-ignore
-    await updateUserPassword(user._id.toString(), newPassword);
-    // @ts-ignore
-    await updateUserResetToken(user._id.toString(), "", new Date(0));
+    
+    user.password = newPassword;
+    user.resetPasswordToken = "";
+    user.resetPasswordExpires = new Date(0);
+    await user.save();
 
     res.status(200).json({ message: "Password has been reset successfully" });
   } catch (error) {
@@ -128,12 +127,13 @@ export const getAuthenticatedUser = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Invalid token" });
     }
 
-    const user = await findUserById((decoded as any).userId);
+    const user = await User.findById((decoded as any).userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json({ user });
+    const { password, ...safeUser } = user.toObject();
+    res.status(200).json({ user: safeUser });
   } catch (error) {
     console.error("❌ Error in getAuthenticatedUser:", error);
     res.status(500).json({ message: "Internal server error" });

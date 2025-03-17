@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import Content, { IContent } from '../models/Content';
+import Content from '../models/Content';
 import mongoose from 'mongoose';
 import { IUser } from '../models/User';
 import { body, validationResult } from 'express-validator';

@@ -24,19 +24,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAuthenticatedUser = exports.resetPassword = exports.forgotPassword = exports.registerUser = exports.loginUser = void 0;
+const User_1 = require("../models/User");
 const jwt_1 = require("../utils/jwt");
-const user_service_1 = require("../services/user.service");
-const bcrypt_1 = __importDefault(require("bcrypt"));
 const crypto_1 = __importDefault(require("crypto"));
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email, password } = req.body;
-        const user = yield (0, user_service_1.findUserByEmail)(email);
-        if (!user || !(yield bcrypt_1.default.compare(password, user.password))) {
+        const user = yield User_1.User.findOne({ email });
+        if (!user || !(yield user.comparePassword(password))) {
             return res.status(400).json({ message: "Invalid email or password" });
         }
-        // @ts-ignore
         const token = (0, jwt_1.generateToken)(user._id.toString());
         const _a = user.toObject(), { password: _ } = _a, safeUser = __rest(_a, ["password"]);
         res
@@ -52,13 +50,19 @@ exports.loginUser = loginUser;
 const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { name, email, password } = req.body;
-        if (yield (0, user_service_1.findUserByEmail)(email)) {
+        if (yield User_1.User.findOne({ email })) {
             return res.status(400).json({ message: "User already exists" });
         }
-        const newUser = yield (0, user_service_1.createUser)(name, email, password, "user");
+        const newUser = yield User_1.User.create({
+            name,
+            email,
+            password,
+            role: "user"
+        });
+        const _b = newUser.toObject(), { password: _ } = _b, safeUser = __rest(_b, ["password"]);
         res
             .status(201)
-            .json({ message: "User registered successfully", user: newUser });
+            .json({ message: "User registered successfully", user: safeUser });
     }
     catch (error) {
         console.error("❌ Error in registerUser:", error);
@@ -69,14 +73,15 @@ exports.registerUser = registerUser;
 const forgotPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email } = req.body;
-        const user = yield (0, user_service_1.findUserByEmail)(email);
+        const user = yield User_1.User.findOne({ email });
         if (!user) {
             return res.status(400).json({ message: "User not found" });
         }
         const resetToken = crypto_1.default.randomBytes(32).toString("hex");
-        yield (0, user_service_1.updateUserResetToken)(
-        // @ts-ignore
-        user._id.toString(), resetToken, new Date(Date.now() + 3600000));
+        yield User_1.User.updateOne({ _id: user._id }, {
+            resetPasswordToken: resetToken,
+            resetPasswordExpires: new Date(Date.now() + 3600000)
+        });
         const transporter = nodemailer_1.default.createTransport({
             service: "Gmail",
             auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
@@ -99,20 +104,17 @@ const resetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     try {
         const { token } = req.params;
         const { newPassword } = req.body;
-        const decoded = (0, jwt_1.verifyToken)(token);
-        if (!decoded) {
-            return res.status(401).json({ message: "Invalid token" });
-        }
-        const user = yield (0, user_service_1.findUserById)(decoded.userId);
-        if (!user ||
-            !user.resetPasswordExpires ||
-            user.resetPasswordExpires < new Date()) {
+        const user = yield User_1.User.findOne({
+            resetPasswordToken: token,
+            resetPasswordExpires: { $gt: new Date() }
+        });
+        if (!user) {
             return res.status(400).json({ message: "Invalid or expired token" });
         }
-        // @ts-ignore
-        yield (0, user_service_1.updateUserPassword)(user._id.toString(), newPassword);
-        // @ts-ignore
-        yield (0, user_service_1.updateUserResetToken)(user._id.toString(), "", new Date(0));
+        user.password = newPassword;
+        user.resetPasswordToken = "";
+        user.resetPasswordExpires = new Date(0);
+        yield user.save();
         res.status(200).json({ message: "Password has been reset successfully" });
     }
     catch (error) {
@@ -132,11 +134,12 @@ const getAuthenticatedUser = (req, res) => __awaiter(void 0, void 0, void 0, fun
         if (!decoded) {
             return res.status(401).json({ message: "Invalid token" });
         }
-        const user = yield (0, user_service_1.findUserById)(decoded.userId);
+        const user = yield User_1.User.findById(decoded.userId);
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-        res.status(200).json({ user });
+        const _c = user.toObject(), { password } = _c, safeUser = __rest(_c, ["password"]);
+        res.status(200).json({ user: safeUser });
     }
     catch (error) {
         console.error("❌ Error in getAuthenticatedUser:", error);

@@ -3,8 +3,6 @@ import Media, { IMedia } from '../models/Media';
 import mongoose from 'mongoose';
 import { IUser } from '../models/User';
 import fs from 'fs';
-import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
 
 // Extended Request interface with user property
 interface AuthRequest extends Request {

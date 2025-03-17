@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Menu, MenuItem, IMenu } from '../models/Menu';
+import { Menu} from '../models/Menu';
 import mongoose from 'mongoose';
 import { IUser } from '../models/User';
 

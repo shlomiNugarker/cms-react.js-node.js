@@ -1,60 +1,50 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateUserResetToken = exports.updateUserPassword = exports.findUserByEmail = exports.checkIfUserExists = exports.createUser = exports.deleteUserById = exports.updateUserById = exports.findUserById = exports.findAllUsers = void 0;
-const User_1 = require("../models/User");
-const bcrypt_1 = __importDefault(require("bcrypt"));
-const findAllUsers = () => __awaiter(void 0, void 0, void 0, function* () {
-    return yield User_1.User.find().select("-password");
-});
-exports.findAllUsers = findAllUsers;
-const findUserById = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield User_1.User.findById(id).select("-password");
-});
-exports.findUserById = findUserById;
-const updateUserById = (id, updateData) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield User_1.User.findByIdAndUpdate(id, updateData, {
-        new: true,
-        runValidators: true,
-    }).select("-password");
-});
-exports.updateUserById = updateUserById;
-const deleteUserById = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield User_1.User.findByIdAndDelete(id);
-});
-exports.deleteUserById = deleteUserById;
-const createUser = (name, email, password, role) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield User_1.User.create({ name, email, password, role });
-});
-exports.createUser = createUser;
-const checkIfUserExists = (email) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield User_1.User.findOne({ email });
-});
-exports.checkIfUserExists = checkIfUserExists;
-const findUserByEmail = (email) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield User_1.User.findOne({ email });
-});
-exports.findUserByEmail = findUserByEmail;
-const updateUserPassword = (id, newPassword) => __awaiter(void 0, void 0, void 0, function* () {
-    const hashedPassword = yield bcrypt_1.default.hash(newPassword, 10);
-    return yield User_1.User.findByIdAndUpdate(id, { password: hashedPassword }, { new: true });
-});
-exports.updateUserPassword = updateUserPassword;
-const updateUserResetToken = (id, resetToken, expires) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield User_1.User.findByIdAndUpdate(id, {
-        resetPasswordToken: resetToken,
-        resetPasswordExpires: expires,
-    });
-});
-exports.updateUserResetToken = updateUserResetToken;
+// import { User } from "../models/User";
+// import bcrypt from "bcrypt";
+// export const findAllUsers = async () => {
+//   return await User.find().select("-password");
+// };
+// export const findUserById = async (id: string) => {
+//   return await User.findById(id).select("-password");
+// };
+// export const updateUserById = async (id: string, updateData: object) => {
+//   return await User.findByIdAndUpdate(id, updateData, {
+//     new: true,
+//     runValidators: true,
+//   }).select("-password");
+// };
+// export const deleteUserById = async (id: string) => {
+//   return await User.findByIdAndDelete(id);
+// };
+// export const createUser = async (
+//   name: string,
+//   email: string,
+//   password: string,
+//   role: string
+// ) => {
+//   return await User.create({ name, email, password, role });
+// };
+// export const checkIfUserExists = async (email: string) => {
+//   return await User.findOne({ email });
+// };
+// export const findUserByEmail = async (email: string) => {
+//   return await User.findOne({ email });
+// };
+// export const updateUserPassword = async (id: string, newPassword: string) => {
+//   const hashedPassword = await bcrypt.hash(newPassword, 10);
+//   return await User.findByIdAndUpdate(
+//     id,
+//     { password: hashedPassword },
+//     { new: true }
+//   );
+// };
+// export const updateUserResetToken = async (
+//   id: string,
+//   resetToken: string,
+//   expires: Date
+// ) => {
+//   return await User.findByIdAndUpdate(id, {
+//     resetPasswordToken: resetToken,
+//     resetPasswordExpires: expires,
+//   });
+// };
