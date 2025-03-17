@@ -1,5 +1,6 @@
 import React from 'react';
 import { TextField, Box, Switch, FormControlLabel, Grid } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
 interface SEOData {
   metaTitle?: string;
@@ -22,6 +23,8 @@ interface SEOSectionProps {
 }
 
 export const SEOSection: React.FC<SEOSectionProps> = ({ seoData, onChange }) => {
+  const { t } = useTranslation(['dashboard']);
+  
   const handleChange = (field: keyof SEOData, value: any) => {
     onChange({
       ...seoData,
@@ -39,39 +42,39 @@ export const SEOSection: React.FC<SEOSectionProps> = ({ seoData, onChange }) => 
       <Grid container spacing={2}>
         <Grid item xs={12}>
           <TextField
-            label="Meta Title"
+            label={t('meta_title_label')}
             fullWidth
             value={seoData.metaTitle || ''}
             onChange={(e) => handleChange('metaTitle', e.target.value)}
             margin="normal"
-            helperText="Recommended length: 50-60 characters"
+            helperText={t('meta_title_helper')}
           />
         </Grid>
         <Grid item xs={12}>
           <TextField
-            label="Meta Description"
+            label={t('meta_description_label')}
             fullWidth
             multiline
             rows={3}
             value={seoData.metaDescription || ''}
             onChange={(e) => handleChange('metaDescription', e.target.value)}
             margin="normal"
-            helperText="Recommended length: 150-160 characters"
+            helperText={t('meta_description_helper')}
           />
         </Grid>
         <Grid item xs={12}>
           <TextField
-            label="Meta Keywords"
+            label={t('meta_keywords_label')}
             fullWidth
             value={seoData.metaKeywords?.join(', ') || ''}
             onChange={(e) => handleKeywordsChange(e.target.value)}
             margin="normal"
-            helperText="Separate keywords with commas"
+            helperText={t('meta_keywords_helper')}
           />
         </Grid>
         <Grid item xs={12}>
           <TextField
-            label="Canonical URL"
+            label={t('canonical_url_label')}
             fullWidth
             value={seoData.canonicalUrl || ''}
             onChange={(e) => handleChange('canonicalUrl', e.target.value)}
@@ -87,14 +90,14 @@ export const SEOSection: React.FC<SEOSectionProps> = ({ seoData, onChange }) => 
                 color="primary"
               />
             }
-            label="No Index (tell search engines not to index this page)"
+            label={t('no_index_label')}
           />
         </Grid>
         
         {/* Open Graph */}
         <Grid item xs={12}>
           <TextField
-            label="OG Title"
+            label={t('og_title_label')}
             fullWidth
             value={seoData.ogTitle || ''}
             onChange={(e) => handleChange('ogTitle', e.target.value)}
@@ -103,7 +106,7 @@ export const SEOSection: React.FC<SEOSectionProps> = ({ seoData, onChange }) => 
         </Grid>
         <Grid item xs={12}>
           <TextField
-            label="OG Description"
+            label={t('og_description_label')}
             fullWidth
             multiline
             rows={2}
@@ -114,19 +117,19 @@ export const SEOSection: React.FC<SEOSectionProps> = ({ seoData, onChange }) => 
         </Grid>
         <Grid item xs={12}>
           <TextField
-            label="OG Image URL"
+            label={t('og_image_label')}
             fullWidth
             value={seoData.ogImage || ''}
             onChange={(e) => handleChange('ogImage', e.target.value)}
             margin="normal"
-            helperText="URL to the image shown when shared on social media"
+            helperText={t('og_image_helper')}
           />
         </Grid>
         
         {/* Twitter */}
         <Grid item xs={12}>
           <TextField
-            label="Twitter Title"
+            label={t('twitter_title_label')}
             fullWidth
             value={seoData.twitterTitle || ''}
             onChange={(e) => handleChange('twitterTitle', e.target.value)}
@@ -135,7 +138,7 @@ export const SEOSection: React.FC<SEOSectionProps> = ({ seoData, onChange }) => 
         </Grid>
         <Grid item xs={12}>
           <TextField
-            label="Twitter Description"
+            label={t('twitter_description_label')}
             fullWidth
             multiline
             rows={2}
@@ -146,7 +149,7 @@ export const SEOSection: React.FC<SEOSectionProps> = ({ seoData, onChange }) => 
         </Grid>
         <Grid item xs={12}>
           <TextField
-            label="Twitter Image URL"
+            label={t('twitter_image_label')}
             fullWidth
             value={seoData.twitterImage || ''}
             onChange={(e) => handleChange('twitterImage', e.target.value)}
@@ -156,14 +159,14 @@ export const SEOSection: React.FC<SEOSectionProps> = ({ seoData, onChange }) => 
         
         <Grid item xs={12}>
           <TextField
-            label="Structured Data (JSON-LD)"
+            label={t('structured_data_label')}
             fullWidth
             multiline
             rows={6}
             value={seoData.structuredData || ''}
             onChange={(e) => handleChange('structuredData', e.target.value)}
             margin="normal"
-            helperText="Advanced: Enter JSON-LD structured data"
+            helperText={t('structured_data_helper')}
           />
         </Grid>
       </Grid>

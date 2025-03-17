@@ -1,36 +1,43 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { pagesApi } from '@/services/api.service';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { useAuth } from '@/context/AuthContext';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Card, CardContent, Button, TextField, MenuItem, FormControl, Select, InputLabel, Typography, Box, Chip, CircularProgress, SelectChangeEvent } from '@mui/material';
+import Grid from '@mui/material/Grid';
+import { pagesApi } from '../services/api.service';
+import { RichTextEditor } from '../components/RichTextEditor';
+import { MediaSelector } from '../components/MediaSelector';
+import { SEOSection } from '../components/SEOSection';
 import { useTranslation } from 'react-i18next';
-import { toast } from "sonner";
+
+interface Media {
+  _id: string;
+  url: string;
+  originalname: string;
+  mimetype: string;
+  mediaType: 'file' | 'embedded';
+  sourceType?: 'youtube' | 'vimeo' | 'cloudinary' | 'other';
+  embedCode?: string;
+  createdAt: string;
+}
 
 interface PageFormData {
-  _id?: string;
   title: string;
   slug: string;
   content: string;
   status: 'draft' | 'published' | 'archived';
   featuredImage?: string;
-  layout?: string;
-  order?: number;
-  parent?: string;
-  seo?: {
+  seo: {
     metaTitle?: string;
     metaDescription?: string;
     metaKeywords?: string[];
     canonicalUrl?: string;
   };
+  publishDate?: string;
 }
 
 const PageForm: React.FC = () => {
+  const { t } = useTranslation(['dashboard', 'common']);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { t } = useTranslation(['dashboard', 'common']);
   const isEditMode = !!id;
 
   const [formData, setFormData] = useState<PageFormData>({
@@ -38,278 +45,263 @@ const PageForm: React.FC = () => {
     slug: '',
     content: '',
     status: 'draft',
-    layout: 'default',
-    order: 0
+    seo: {},
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [mediaOpen, setMediaOpen] = useState(false);
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
+    const fetchPage = async () => {
+      if (isEditMode) {
+        setLoading(true);
+        try {
+          const response = await pagesApi.getPageById(id);
+          setFormData(response);
+        } catch (err) {
+          setError(t('error_loading_page'));
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
 
-    if (isEditMode) {
-      fetchPage();
-    }
-  }, [id, user, navigate, isEditMode]);
+    fetchPage();
+  }, [id, isEditMode, t]);
 
-  const fetchPage = async () => {
-    try {
-      setLoading(true);
-      const response = await pagesApi.getPageById(id!);
-      setFormData(response);
-      setLoading(false);
-    } catch (err) {
-      setError(t('failed_fetch_page', { ns: 'dashboard' }));
-      setLoading(false);
-    }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleSelectChange = (e: SelectChangeEvent) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleContentChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      content: value
+    }));
+  };
+
+  const handleSEOChange = (seoData: PageFormData['seo']) => {
+    setFormData(prev => ({
+      ...prev,
+      seo: seoData
+    }));
+  };
+
+  const handleMediaSelect = (media: Media) => {
+    setFormData(prev => ({ ...prev, featuredImage: media.url }));
   };
 
   const generateSlug = () => {
     const slug = formData.title
       .toLowerCase()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-');
-    
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
     setFormData(prev => ({ ...prev, slug }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setSaving(true);
+    setError('');
+
     try {
-      setSaving(true);
-      setError('');
-      
       if (isEditMode) {
-        await pagesApi.updatePage(id!, formData);
-        toast.success(t('page_updated_successfully', { ns: 'dashboard' }));
+        await pagesApi.updatePage(id, formData);
       } else {
         await pagesApi.createPage(formData);
-        toast.success(t('page_created_successfully', { ns: 'dashboard' }));
       }
-      
-      navigate('/admin/content');
+      navigate('/admin/pages');
     } catch (err) {
-      setError(t('failed_save_page', { ns: 'dashboard' }));
+      setError(t('error_saving_page'));
+    } finally {
       setSaving(false);
     }
   };
-  
+
   if (loading) {
-    return <div className="text-center py-10">{t('loading', { ns: 'common' })}</div>;
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-4xl">
-      <h1 className="text-2xl font-bold mb-4">
-        {isEditMode 
-          ? t('edit_page', { ns: 'dashboard', title: formData.title }) 
-          : t('create_new_page', { ns: 'dashboard' })}
-      </h1>
-      
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
-          {error}
-        </div>
-      )}
-      
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-2">
-          <label htmlFor="title" className="block text-sm font-medium">
-            {t('title', { ns: 'dashboard' })} *
-          </label>
-          <Input
-            id="title"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <label htmlFor="slug" className="block text-sm font-medium">
-              {t('slug', { ns: 'dashboard' })} *
-            </label>
+    <form onSubmit={handleSubmit}>
+      <Card>
+        <CardContent>
+          <Typography variant="h5" component="h2" gutterBottom>
+            {isEditMode ? t('edit_page') : t('create_new_page')}
+          </Typography>
+          
+          {error && (
+            <Typography color="error" sx={{ mb: 2 }}>
+              {error}
+            </Typography>
+          )}
+          
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={8}>
+              {/* Main Page Information */}
+              <TextField
+                label={t('title')}
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                fullWidth
+                required
+                margin="normal"
+              />
+              
+              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                <TextField
+                  label={t('slug')}
+                  name="slug"
+                  value={formData.slug}
+                  onChange={handleChange}
+                  fullWidth
+                  margin="normal"
+                  helperText={t('url_friendly_version')}
+                />
+                <Button 
+                  variant="outlined" 
+                  sx={{ mt: 2, height: 56 }}
+                  onClick={generateSlug}
+                >
+                  {t('generate')}
+                </Button>
+              </Box>
+              
+              <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+                {t('content')}
+              </Typography>
+              <RichTextEditor 
+                initialValue={formData.content}
+                onChange={handleContentChange}
+              />
+              
+              <Box sx={{ mt: 4 }}>
+                <Typography variant="h6" gutterBottom>
+                  {t('seo_settings')}
+                </Typography>
+                <SEOSection 
+                  seoData={formData.seo} 
+                  onChange={handleSEOChange} 
+                />
+              </Box>
+            </Grid>
+            
+            <Grid item xs={12} md={4}>
+              {/* Page Sidebar */}
+              <Card variant="outlined" sx={{ mb: 3 }}>
+                <CardContent>
+                  <Typography variant="subtitle1" gutterBottom>
+                    {t('page_settings')}
+                  </Typography>
+                  
+                  <FormControl fullWidth margin="normal">
+                    <InputLabel>{t('status')}</InputLabel>
+                    <Select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleSelectChange}
+                      label={t('status')}
+                    >
+                      <MenuItem value="draft">{t('draft')}</MenuItem>
+                      <MenuItem value="published">{t('published')}</MenuItem>
+                      <MenuItem value="archived">{t('archived')}</MenuItem>
+                    </Select>
+                  </FormControl>
+                  
+                  <TextField
+                    label={t('publish_date')}
+                    name="publishDate"
+                    type="datetime-local"
+                    value={formData.publishDate || ''}
+                    onChange={handleChange}
+                    fullWidth
+                    margin="normal"
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                  />
+                </CardContent>
+              </Card>
+              
+              <Card variant="outlined" sx={{ mb: 3 }}>
+                <CardContent>
+                  <Typography variant="subtitle1" gutterBottom>
+                    {t('featured_image')}
+                  </Typography>
+                  
+                  <Button
+                    variant="outlined"
+                    onClick={() => setMediaOpen(true)}
+                    fullWidth
+                    sx={{ mb: 2 }}
+                  >
+                    {formData.featuredImage ? t('change_featured_image') : t('select_featured_image')}
+                  </Button>
+                  
+                  {formData.featuredImage && (
+                    <Box sx={{ mt: 1 }}>
+                      <Typography variant="body2" sx={{ mb: 1 }}>{t('selected_image')}</Typography>
+                      <Chip 
+                        label={formData.featuredImage}
+                        onDelete={() => setFormData(prev => ({ ...prev, featuredImage: undefined }))}
+                      />
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+          
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
             <Button 
-              type="button" 
-              variant="outline" 
-              size="sm"
-              onClick={generateSlug}
+              variant="outlined" 
+              onClick={() => navigate('/admin/pages')}
             >
-              {t('generate_from_title', { ns: 'dashboard' })}
+              {t('cancel')}
             </Button>
-          </div>
-          <Input
-            id="slug"
-            name="slug"
-            value={formData.slug}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <label htmlFor="content" className="block text-sm font-medium">
-            {t('content', { ns: 'dashboard' })} *
-          </label>
-          <Textarea
-            id="content"
-            name="content"
-            value={formData.content}
-            onChange={handleChange}
-            rows={15}
-            required
-          />
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label htmlFor="status" className="block text-sm font-medium">
-              {t('status', { ns: 'dashboard' })} *
-            </label>
-            <select
-              id="status"
-              name="status"
-              className="w-full p-2 border rounded"
-              value={formData.status}
-              onChange={handleChange}
-              required
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={saving}
             >
-              <option value="draft">{t('draft', { ns: 'dashboard' })}</option>
-              <option value="published">{t('published', { ns: 'dashboard' })}</option>
-              <option value="archived">{t('archived', { ns: 'dashboard' })}</option>
-            </select>
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="layout" className="block text-sm font-medium">
-              {t('layout', { ns: 'dashboard' })}
-            </label>
-            <select
-              id="layout"
-              name="layout"
-              className="w-full p-2 border rounded"
-              value={formData.layout}
-              onChange={handleChange}
-            >
-              <option value="default">{t('default', { ns: 'dashboard' })}</option>
-              <option value="full-width">{t('full_width', { ns: 'dashboard' })}</option>
-              <option value="sidebar">{t('with_sidebar', { ns: 'dashboard' })}</option>
-            </select>
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="order" className="block text-sm font-medium">
-              {t('order', { ns: 'dashboard' })}
-            </label>
-            <Input
-              id="order"
-              name="order"
-              type="number"
-              value={formData.order?.toString() || '0'}
-              onChange={handleChange}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="featuredImage" className="block text-sm font-medium">
-              {t('featured_image', { ns: 'dashboard' })}
-            </label>
-            <Input
-              id="featuredImage"
-              name="featuredImage"
-              type="text"
-              value={formData.featuredImage || ''}
-              onChange={handleChange}
-              placeholder="Image URL"
-            />
-          </div>
-        </div>
-        
-        <div className="border-t pt-4 mt-4">
-          <h2 className="text-lg font-semibold mb-2">{t('seo_settings', { ns: 'dashboard' })}</h2>
-          
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="seoTitle" className="block text-sm font-medium">
-                {t('meta_title', { ns: 'dashboard' })}
-              </label>
-              <Input
-                id="seoTitle"
-                name="seoTitle"
-                value={formData.seo?.metaTitle || ''}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  seo: { ...prev.seo, metaTitle: e.target.value }
-                }))}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="seoDescription" className="block text-sm font-medium">
-                {t('meta_description', { ns: 'dashboard' })}
-              </label>
-              <Textarea
-                id="seoDescription"
-                name="seoDescription"
-                value={formData.seo?.metaDescription || ''}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  seo: { ...prev.seo, metaDescription: e.target.value }
-                }))}
-                rows={3}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="seoKeywords" className="block text-sm font-medium">
-                {t('meta_keywords', { ns: 'dashboard' })}
-              </label>
-              <Input
-                id="seoKeywords"
-                name="seoKeywords"
-                placeholder="keyword1, keyword2, keyword3"
-                value={formData.seo?.metaKeywords?.join(', ') || ''}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  seo: { 
-                    ...prev.seo, 
-                    metaKeywords: e.target.value.split(',').map(k => k.trim()).filter(Boolean)
-                  }
-                }))}
-              />
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex justify-end gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate('/admin/content')}
-          >
-            {t('cancel', { ns: 'common' })}
-          </Button>
-          <Button
-            type="submit"
-            disabled={saving}
-          >
-            {saving ? t('saving', { ns: 'common' }) : t('save', { ns: 'common' })}
-          </Button>
-        </div>
-      </form>
-    </div>
+              {saving ? (
+                <>
+                  <CircularProgress size={24} sx={{ mr: 1 }} />
+                  {t('saving')}
+                </>
+              ) : (
+                isEditMode ? t('update_page') : t('create_page')
+              )}
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
+      
+      <MediaSelector 
+        open={mediaOpen}
+        onOpenChange={setMediaOpen}
+        onSelect={handleMediaSelect}
+      />
+    </form>
   );
 };
 

@@ -71,7 +71,7 @@ const ProductForm: React.FC = () => {
   const [galleryImageUrl, setGalleryImageUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -90,20 +90,48 @@ const ProductForm: React.FC = () => {
     try {
       setLoading(true);
       const response = await productsApi.getProductById(id!);
-      setFormData(response);
       
-      // Convert Map to array for attributes
+      // Ensure all required fields are present with proper defaults
+      const normalizedProduct = {
+        title: response.title || '',
+        slug: response.slug || '',
+        description: response.description || '',
+        shortDescription: response.shortDescription || '',
+        price: response.price || 0,
+        salePrice: response.salePrice,
+        sku: response.sku || '',
+        status: response.status || 'draft',
+        categories: response.categories || [],
+        tags: response.tags || [],
+        inStock: response.inStock ?? true,
+        stockQuantity: response.stockQuantity || 0,
+        featuredImage: response.featuredImage || '',
+        galleryImages: response.galleryImages || [],
+        seo: {
+          metaTitle: response.seo?.metaTitle || '',
+          metaDescription: response.seo?.metaDescription || '',
+          metaKeywords: response.seo?.metaKeywords || [],
+          canonicalUrl: response.seo?.canonicalUrl || ''
+        }
+      };
+
+      setFormData(normalizedProduct);
+      
+      // Handle attributes separately
       if (response.attributes) {
         const attributesArray: Attribute[] = [];
-        response.attributes.forEach((value: string, key: string) => {
-          attributesArray.push({ name: key, value });
+        Object.entries(response.attributes).forEach(([key, value]) => {
+          attributesArray.push({ name: key, value: String(value) });
         });
         setAttributes(attributesArray);
       }
       
       setLoading(false);
-    } catch (err) {
-      setError(t('failed_fetch_product', { ns: 'dashboard' }));
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || err.message || t('failed_fetch_product', { ns: 'dashboard' });
+      setError(errorMessage);
+      toast.error(errorMessage);
+      console.error('Error fetching product:', err);
       setLoading(false);
     }
   };
@@ -197,20 +225,33 @@ const ProductForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     try {
       setSaving(true);
-      setError('');
+      setError(null);
       
-      // Convert attributes array to Map
-      const attributesMap = new Map<string, string>();
-      attributes.forEach(attr => {
-        attributesMap.set(attr.name, attr.value);
-      });
+      // Convert attributes array to object
+      const attributesObject = attributes.reduce((acc, attr) => {
+        acc[attr.name] = attr.value;
+        return acc;
+      }, {} as Record<string, string>);
       
+      // Prepare the data for submission
       const productData = {
         ...formData,
-        attributes: attributesMap
+        attributes: attributesObject,
+        // Ensure numbers are properly typed
+        price: Number(formData.price),
+        salePrice: formData.salePrice ? Number(formData.salePrice) : undefined,
+        stockQuantity: formData.stockQuantity ? Number(formData.stockQuantity) : undefined,
+        // Clean up empty arrays and undefined values
+        galleryImages: formData.galleryImages?.filter(Boolean) || [],
+        categories: formData.categories.filter(Boolean),
+        tags: formData.tags.filter(Boolean),
+        // Clean up SEO data
+        seo: {
+          ...formData.seo,
+          metaKeywords: formData.seo?.metaKeywords?.filter(Boolean) || []
+        }
       };
       
       if (isEditMode) {
@@ -221,9 +262,17 @@ const ProductForm: React.FC = () => {
         toast.success(t('product_created_successfully', { ns: 'dashboard' }));
       }
       
-      navigate('/admin/content');
-    } catch (err) {
-      setError(t('failed_save_product', { ns: 'dashboard' }));
+      // Short delay to ensure toast is visible
+      setTimeout(() => {
+        navigate('/admin/content');
+      }, 500);
+      
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || err.message || t('failed_save_product', { ns: 'dashboard' });
+      setError(errorMessage);
+      toast.error(errorMessage);
+      console.error('Error saving product:', err);
+    } finally {
       setSaving(false);
     }
   };

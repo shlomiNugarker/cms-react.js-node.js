@@ -6,6 +6,7 @@ import { postsApi, categoriesApi } from '../services/api.service';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { MediaSelector } from '../components/MediaSelector';
 import { SEOSection } from '../components/SEOSection';
+import { useTranslation } from 'react-i18next';
 
 // Add Media interface to match the MediaSelector component
 interface Media {
@@ -46,6 +47,7 @@ interface PostFormData {
 }
 
 const PostForm: React.FC = () => {
+  const { t } = useTranslation(['dashboard', 'common']);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isEditMode = !!id;
@@ -232,7 +234,7 @@ const PostForm: React.FC = () => {
       <Card>
         <CardContent>
           <Typography variant="h5" component="h2" gutterBottom>
-            {isEditMode ? 'Edit Post' : 'Create New Post'}
+            {isEditMode ? t('edit_post') : t('create_new_post')}
           </Typography>
           
           {error && (
@@ -245,7 +247,7 @@ const PostForm: React.FC = () => {
             <Grid item xs={12} md={8}>
               {/* Main Post Information */}
               <TextField
-                label="Title"
+                label={t('title')}
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
@@ -256,25 +258,25 @@ const PostForm: React.FC = () => {
               
               <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
                 <TextField
-                  label="Slug"
+                  label={t('slug')}
                   name="slug"
                   value={formData.slug}
                   onChange={handleChange}
                   fullWidth
                   margin="normal"
-                  helperText="The URL-friendly version of the title"
+                  helperText={t('url_friendly_version')}
                 />
                 <Button 
                   variant="outlined" 
                   sx={{ mt: 2, height: 56 }}
                   onClick={generateSlug}
                 >
-                  Generate
+                  {t('generate')}
                 </Button>
               </Box>
               
               <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
-                Content
+                {t('content')}
               </Typography>
               <RichTextEditor 
                 initialValue={formData.content}
@@ -283,7 +285,7 @@ const PostForm: React.FC = () => {
               
               <Box sx={{ mt: 4 }}>
                 <Typography variant="h6" gutterBottom>
-                  SEO Settings
+                  {t('seo_settings')}
                 </Typography>
                 <SEOSection 
                   seoData={formData.seo} 
@@ -297,25 +299,25 @@ const PostForm: React.FC = () => {
               <Card variant="outlined" sx={{ mb: 3 }}>
                 <CardContent>
                   <Typography variant="subtitle1" gutterBottom>
-                    Post Settings
+                    {t('post_settings')}
                   </Typography>
                   
                   <FormControl fullWidth margin="normal">
-                    <InputLabel>Status</InputLabel>
+                    <InputLabel>{t('status')}</InputLabel>
                     <Select
                       name="status"
                       value={formData.status}
                       onChange={(e) => handleChange(e as any)}
-                      label="Status"
+                      label={t('status')}
                     >
-                      <MenuItem value="draft">Draft</MenuItem>
-                      <MenuItem value="published">Published</MenuItem>
-                      <MenuItem value="archived">Archived</MenuItem>
+                      <MenuItem value="draft">{t('draft')}</MenuItem>
+                      <MenuItem value="published">{t('published')}</MenuItem>
+                      <MenuItem value="archived">{t('archived')}</MenuItem>
                     </Select>
                   </FormControl>
                   
                   <TextField
-                    label="Publish Date"
+                    label={t('publish_date')}
                     name="publishDate"
                     type="datetime-local"
                     value={formData.publishDate || ''}
@@ -332,7 +334,7 @@ const PostForm: React.FC = () => {
               <Card variant="outlined" sx={{ mb: 3 }}>
                 <CardContent>
                   <Typography variant="subtitle1" gutterBottom>
-                    Featured Image
+                    {t('featured_image')}
                   </Typography>
                   
                   <Button
@@ -341,12 +343,12 @@ const PostForm: React.FC = () => {
                     fullWidth
                     sx={{ mb: 2 }}
                   >
-                    {formData.featuredImage ? 'Change Featured Image' : 'Select Featured Image'}
+                    {formData.featuredImage ? t('change_featured_image') : t('select_featured_image')}
                   </Button>
                   
                   {formData.featuredImage && (
                     <Box sx={{ mt: 1 }}>
-                      <Typography variant="body2" sx={{ mb: 1 }}>Selected Image:</Typography>
+                      <Typography variant="body2" sx={{ mb: 1 }}>{t('selected_image')}</Typography>
                       <Chip 
                         label={formData.featuredImage}
                         onDelete={() => setFormData(prev => ({ ...prev, featuredImage: undefined }))}
@@ -359,17 +361,17 @@ const PostForm: React.FC = () => {
               <Card variant="outlined" sx={{ mb: 3 }}>
                 <CardContent>
                   <Typography variant="subtitle1" gutterBottom>
-                    Categories
+                    {t('categories')}
                   </Typography>
                   
                   <FormControl fullWidth margin="normal">
-                    <InputLabel>Categories</InputLabel>
+                    <InputLabel>{t('categories')}</InputLabel>
                     <Select
                       name="categories"
                       multiple
                       value={formData.categories || []}
                       onChange={(e) => handleChange(e as any)}
-                      label="Categories"
+                      label={t('categories')}
                       renderValue={(selected) => (
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                           {(selected as string[]).map((value) => {
@@ -389,7 +391,7 @@ const PostForm: React.FC = () => {
                           {category.name}
                         </MenuItem>
                       )) : (
-                        <MenuItem disabled>No categories available</MenuItem>
+                        <MenuItem disabled>{t('no_categories_available')}</MenuItem>
                       )}
                     </Select>
                   </FormControl>
@@ -399,12 +401,12 @@ const PostForm: React.FC = () => {
               <Card variant="outlined" sx={{ mb: 3 }}>
                 <CardContent>
                   <Typography variant="subtitle1" gutterBottom>
-                    Tags
+                    {t('tags')}
                   </Typography>
                   
                   <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
                     <TextField
-                      label="Add Tag"
+                      label={t('add_tag')}
                       value={newTag}
                       onChange={(e) => setNewTag(e.target.value)}
                       sx={{ flexGrow: 1, mr: 1 }}
@@ -414,7 +416,7 @@ const PostForm: React.FC = () => {
                       onClick={handleTagAdd}
                       sx={{ mt: 1 }}
                     >
-                      Add
+                      {t('add')}
                     </Button>
                   </Box>
                   
@@ -437,7 +439,7 @@ const PostForm: React.FC = () => {
               variant="outlined" 
               onClick={() => navigate('/admin/posts')}
             >
-              Cancel
+              {t('cancel')}
             </Button>
             <Button
               type="submit"
@@ -448,10 +450,10 @@ const PostForm: React.FC = () => {
               {saving ? (
                 <>
                   <CircularProgress size={24} sx={{ mr: 1 }} />
-                  Saving...
+                  {t('saving')}
                 </>
               ) : (
-                isEditMode ? 'Update Post' : 'Create Post'
+                isEditMode ? t('update_post') : t('create_post')
               )}
             </Button>
           </Box>
