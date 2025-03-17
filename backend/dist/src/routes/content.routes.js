@@ -29,13 +29,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const contentController = __importStar(require("../controllers/content.controller"));
 const auth_middleware_1 = require("../middlewares/auth.middleware");
+const role_middleware_1 = require("../middlewares/role.middleware");
 const router = express_1.default.Router();
 // Public routes
 router.get('/', contentController.getAllContent);
 router.get('/slug/:slug', contentController.getContentBySlug);
 router.get('/:id', contentController.getContentById);
-// Protected routes
-router.post('/', auth_middleware_1.authMiddleware, contentController.createContent);
-router.put('/:id', auth_middleware_1.authMiddleware, contentController.updateContent);
-router.delete('/:id', auth_middleware_1.authMiddleware, contentController.deleteContent);
+// Protected routes - only admin and editor roles can create, update, or delete content
+router.post('/', auth_middleware_1.authMiddleware, (0, role_middleware_1.roleMiddleware)(['admin']), contentController.validateContent, contentController.createContent);
+router.put('/:id', auth_middleware_1.authMiddleware, (0, role_middleware_1.roleMiddleware)(['admin']), contentController.validateContent, contentController.updateContent);
+router.delete('/:id', auth_middleware_1.authMiddleware, (0, role_middleware_1.roleMiddleware)(['admin']), contentController.deleteContent);
 exports.default = router;
