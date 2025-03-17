@@ -7,6 +7,9 @@ import Register from '@/pages/Register';
 import Dashboard from '@/pages/Dashboard';
 import ContentManagement from '@/pages/ContentManagement';
 import ContentEditor from '@/pages/ContentEditor';
+import PageForm from '@/pages/PageForm';
+import PostForm from '@/pages/PostForm';
+import ProductForm from '@/pages/ProductForm';
 import MediaManager from '@/pages/MediaManager';
 import SeoManagement from '@/pages/SeoManagement';
 import SeoEdit from '@/pages/SeoEdit';
@@ -68,6 +71,30 @@ const router = createBrowserRouter([
           {
             path: 'admin/content/edit/:id',
             element: <ContentEditor />,
+          },
+          {
+            path: 'admin/page/new',
+            element: <PageForm />,
+          },
+          {
+            path: 'admin/page/edit/:id',
+            element: <PageForm />,
+          },
+          {
+            path: 'admin/post/new',
+            element: <PostForm />,
+          },
+          {
+            path: 'admin/post/edit/:id',
+            element: <PostForm />,
+          },
+          {
+            path: 'admin/product/new',
+            element: <ProductForm />,
+          },
+          {
+            path: 'admin/product/edit/:id',
+            element: <ProductForm />,
           },
           {
             path: 'admin/media',

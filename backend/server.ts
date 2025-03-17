@@ -17,6 +17,9 @@ import categoryRoutes from "./src/routes/category.routes";
 import mediaRoutes from "./src/routes/media.routes";
 import menuRoutes from "./src/routes/menu.routes";
 import siteSettingsRoutes from "./src/routes/siteSettings.routes";
+import pagesRoutes from "./src/routes/pages.routes";
+import postsRoutes from "./src/routes/posts.routes";
+import productsRoutes from "./src/routes/products.routes";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 
@@ -98,6 +101,9 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/media", mediaRoutes);
 app.use("/api/menus", menuRoutes);
 app.use("/api/site-settings", siteSettingsRoutes);
+app.use("/api/pages", pagesRoutes);
+app.use("/api/posts", postsRoutes);
+app.use("/api/products", productsRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {

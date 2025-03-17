@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export const httpService = { get, post, put, del };
+export const httpService = { get, post, put, del, uploadFile };
 
 const BASE_URL =
   process.env.NODE_ENV === "production" ? "" : "http://localhost:3030";
@@ -73,4 +73,41 @@ async function put(endpoint: string, data: any = null, secure = false) {
 
 async function del(endpoint: string, secure = false) {
   return request("DELETE", endpoint, null, secure);
+}
+
+async function uploadFile(endpoint: string, formData: FormData, secure = false) {
+  try {
+    const headers: Record<string, string> = {};
+    
+    // Add token to headers if secure requests need token auth
+    if (secure) {
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+    }
+    
+    console.log(`🟢 Sending file upload to ${BASE_URL + endpoint}`);
+    
+    const res = await fetch(BASE_URL + endpoint, {
+      method: 'POST',
+      headers,
+      body: formData,
+      credentials: 'include'
+    });
+    
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(
+        `Request failed with status ${res.status}: ${
+          errorData.message || "Unknown error"
+        }`
+      );
+    }
+    
+    return res.json();
+  } catch (err: unknown) {
+    console.error("🔴 File Upload Error:", err);
+    throw err;
+  }
 }
