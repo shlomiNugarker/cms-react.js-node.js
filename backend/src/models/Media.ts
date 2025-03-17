@@ -37,7 +37,10 @@ const MediaSchema = new Schema<IMedia>(
     },
     path: {
       type: String,
-      required: true,
+      required: function(this: any) {
+        return this.mediaType === 'file'; // Only required for file type media
+      },
+      default: '',
     },
     url: {
       type: String,

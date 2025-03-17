@@ -110,12 +110,28 @@ export const addEmbeddedMedia = async (req: Request, res: Response) => {
     // Generate a unique filename for the embedded media
     const filename = `embedded_${sourceType}_${Date.now()}`;
     
+    // Extract video ID for virtual path
+    let videoId = '';
+    if (sourceType === 'youtube') {
+      // Extract YouTube video ID from URL
+      const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+      const match = url.match(youtubeRegex);
+      videoId = match ? match[1] : `unknown_${Date.now()}`;
+    } else if (sourceType === 'vimeo') {
+      // Extract Vimeo video ID from URL
+      const vimeoRegex = /vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|)(\d+)(?:|\/\?)/;
+      const match = url.match(vimeoRegex);
+      videoId = match ? match[1] : `unknown_${Date.now()}`;
+    } else {
+      videoId = `${sourceType}_${Date.now()}`;
+    }
+    
     const newMedia = new Media({
       filename,
       originalname: title || `Embedded ${sourceType} video`,
       mimetype: 'video/embedded',
       size: 0, // Embedded media doesn't have a file size
-      path: '', // No local path for embedded media
+      path: `virtual/embedded/${sourceType}/${videoId}`, // Virtual path for embedded media
       url,
       mediaType: 'embedded',
       sourceType,
