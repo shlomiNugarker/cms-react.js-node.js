@@ -1,123 +1,71 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IContent extends Document {
   title: string;
-  slug: string;
   content: string;
-  contentType: 'page' | 'post' | 'product' | 'custom';
-  status: 'draft' | 'published' | 'archived';
+  type: 'page' | 'post';
+  status: 'draft' | 'published';
   author: mongoose.Types.ObjectId;
-  featuredImage?: string;
+  slug: string;
   categories: string[];
   tags: string[];
-  metadata: Map<string, string>;
-  // SEO Fields
-  seo: {
-    metaTitle?: string;
-    metaDescription?: string;
-    metaKeywords?: string[];
-    ogTitle?: string;
-    ogDescription?: string;
-    ogImage?: string;
-    twitterTitle?: string;
-    twitterDescription?: string;
-    twitterImage?: string;
-    canonicalUrl?: string;
-    noIndex?: boolean;
-    structuredData?: string;
-  };
-  // Layout Fields
-  layout?: string;
-  order?: number;
-  parent?: mongoose.Types.ObjectId;
+  metadata: Record<string, string>;
+  featuredImage?: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const ContentSchema = new Schema<IContent>(
-  {
-    title: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    slug: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-      lowercase: true,
-    },
-    content: {
-      type: String,
-      required: true,
-    },
-    contentType: {
-      type: String,
-      enum: ['page', 'post', 'product', 'custom'],
-      default: 'post',
-    },
-    status: {
-      type: String,
-      enum: ['draft', 'published', 'archived'],
-      default: 'draft',
-    },
-    author: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    featuredImage: {
-      type: String,
-    },
-    categories: [{
-      type: String,
-      trim: true,
-    }],
-    tags: [{
-      type: String,
-      trim: true,
-    }],
-    metadata: {
-      type: Map,
-      of: String,
-      default: new Map(),
-    },
-    // SEO Fields
-    seo: {
-      metaTitle: String,
-      metaDescription: String,
-      metaKeywords: [String],
-      ogTitle: String,
-      ogDescription: String,
-      ogImage: String,
-      twitterTitle: String,
-      twitterDescription: String,
-      twitterImage: String,
-      canonicalUrl: String,
-      noIndex: {
-        type: Boolean,
-        default: false
-      },
-      structuredData: String,
-    },
-    // Layout Fields
-    layout: String,
-    order: {
-      type: Number,
-      default: 0
-    },
-    parent: {
-      type: Schema.Types.ObjectId,
-      ref: 'Content'
-    }
+const contentSchema = new Schema({
+  title: {
+    type: String,
+    required: [true, 'Title is required'],
+    trim: true,
+    maxlength: [100, 'Title cannot be more than 100 characters'],
   },
-  {
-    timestamps: true,
-  }
-);
+  content: {
+    type: String,
+    required: [true, 'Content is required'],
+  },
+  type: {
+    type: String,
+    enum: ['page', 'post'],
+    required: [true, 'Content type is required'],
+  },
+  status: {
+    type: String,
+    enum: ['draft', 'published'],
+    default: 'draft',
+  },
+  author: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'Author is required'],
+  },
+  slug: {
+    type: String,
+    required: [true, 'Slug is required'],
+    unique: true,
+    trim: true,
+  },
+  categories: [{
+    type: String,
+    trim: true,
+  }],
+  tags: [{
+    type: String,
+    trim: true,
+  }],
+  metadata: {
+    type: Map,
+    of: String,
+    default: {},
+  },
+  featuredImage: {
+    type: String,
+  },
+}, {
+  timestamps: true,
+});
 
-// Create text index for search functionality
-ContentSchema.index({ title: 'text', content: 'text', tags: 'text', 'seo.metaKeywords': 'text' });
-
-export default mongoose.model<IContent>('Content', ContentSchema); 
+const ContentModel = mongoose.model<IContent>('Content', contentSchema);
+export { ContentModel as Content }; 

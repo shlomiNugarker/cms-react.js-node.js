@@ -38,6 +38,11 @@ const Header = () => {
       roles: ["admin"],
     },
     {
+      label: t("form_submissions", { ns: "dashboard" }),
+      path: "/admin/submissions",
+      roles: ["admin"],
+    },
+    {
       label: t("content", { ns: "dashboard" }),
       path: "/admin/content",
       roles: ["admin"],

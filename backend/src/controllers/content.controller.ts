@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import Content from '../models/Content';
+import { Content } from '../models/Content';
 import mongoose from 'mongoose';
 import { IUser } from '../models/User';
 import { body, validationResult } from 'express-validator';
@@ -13,8 +13,8 @@ interface AuthRequest extends Request {
 export const validateContent = [
   body('title').notEmpty().withMessage('Title is required'),
   body('content').notEmpty().withMessage('Content is required'),
-  body('contentType').isIn(['post', 'page', 'custom']).withMessage('Invalid content type'),
-  body('status').isIn(['draft', 'published', 'archived']).withMessage('Invalid status'),
+  body('type').isIn(['post', 'page']).withMessage('Invalid content type'),
+  body('status').isIn(['draft', 'published']).withMessage('Invalid status'),
   body('categories').isArray().optional(),
   body('tags').isArray().optional(),
   body('customSlug').optional().isString(),
@@ -29,7 +29,7 @@ export const createContent = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ errors: errors.array() });
     }
     
-    const { title, content, contentType, status, categories, tags, metadata, featuredImage, customSlug } = req.body;
+    const { title, content, type, status, categories, tags, metadata, featuredImage, customSlug } = req.body;
     
     if (!req.user) {
       return res.status(401).json({ message: 'Unauthorized' });
@@ -56,7 +56,7 @@ export const createContent = async (req: AuthRequest, res: Response) => {
       title,
       slug,
       content,
-      contentType: contentType || 'post',
+      type: type || 'post',
       status: status || 'draft',
       author: req.user._id,
       categories: categories || [],
@@ -80,7 +80,7 @@ export const getAllContent = async (req: Request, res: Response) => {
     const { 
       page = 1, 
       limit = 10, 
-      contentType, 
+      type, 
       status, 
       search,
       sortBy = 'createdAt',
@@ -94,7 +94,7 @@ export const getAllContent = async (req: Request, res: Response) => {
     // Build filter object
     const filter: any = {};
     
-    if (contentType) filter.contentType = contentType;
+    if (type) filter.type = type;
     if (status) filter.status = status;
     
     // Add text search if provided
@@ -176,7 +176,7 @@ export const updateContent = async (req: AuthRequest, res: Response) => {
     }
     
     const { id } = req.params;
-    const { title, content, contentType, status, categories, tags, metadata, featuredImage, customSlug } = req.body;
+    const { title, content, type, status, categories, tags, metadata, featuredImage, customSlug } = req.body;
     
     if (!req.user) {
       return res.status(401).json({ message: 'Unauthorized' });
@@ -228,7 +228,7 @@ export const updateContent = async (req: AuthRequest, res: Response) => {
         title: title || existingContent.title,
         slug,
         content: content || existingContent.content,
-        contentType: contentType || existingContent.contentType,
+        type: type || existingContent.type,
         status: status || existingContent.status,
         categories: categories || existingContent.categories,
         tags: tags || existingContent.tags,

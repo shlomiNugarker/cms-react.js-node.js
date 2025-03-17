@@ -20,6 +20,7 @@ import siteSettingsRoutes from "./src/routes/siteSettings.routes";
 import pagesRoutes from "./src/routes/pages.routes";
 import postsRoutes from "./src/routes/posts.routes";
 import productsRoutes from "./src/routes/products.routes";
+import formSubmissionRoutes from "./src/routes/formSubmissionRoutes";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 
@@ -104,6 +105,7 @@ app.use("/api/site-settings", siteSettingsRoutes);
 app.use("/api/pages", pagesRoutes);
 app.use("/api/posts", postsRoutes);
 app.use("/api/products", productsRoutes);
+app.use("/api/forms", formSubmissionRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {

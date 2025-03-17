@@ -14,6 +14,7 @@ import MediaManager from '@/pages/MediaManager';
 import SeoManagement from '@/pages/SeoManagement';
 import SeoEdit from '@/pages/SeoEdit';
 import AdminUsers from '@/pages/AdminUsers';
+import FormSubmissions from '@/pages/FormSubmissions';
 import { AuthProvider } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Unauthorized from '@/pages/Unauthorized';
@@ -59,6 +60,10 @@ const router = createBrowserRouter([
           {
             path: 'admin/users',
             element: <AdminUsers />,
+          },
+          {
+            path: 'admin/submissions',
+            element: <FormSubmissions />,
           },
           {
             path: 'admin/content',

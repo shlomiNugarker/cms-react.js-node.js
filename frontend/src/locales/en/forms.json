@@ -1,0 +1,23 @@
+{
+  "contactTitle": "Contact Us",
+  "name": "Name",
+  "email": "Email",
+  "phone": "Phone",
+  "message": "Message",
+  "submit": "Submit",
+  "sending": "Sending...",
+  "successMessage": "Thank you! Your message has been received successfully. We'll get back to you soon.",
+  "errorMessage": "Sorry, there was an error sending your message. Please try again later.",
+  "submissionsTitle": "Form Submissions",
+  "date": "Date",
+  "type": "Type",
+  "status": "Status",
+  "statusNew": "New",
+  "statusRead": "Read",
+  "statusReplied": "Replied",
+  "statusArchived": "Archived",
+  "fetchError": "Error loading form submissions",
+  "updateError": "Error updating form status",
+  "deleteError": "Error deleting form submission",
+  "deleteConfirm": "Are you sure you want to delete this submission?"
+} 
