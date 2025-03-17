@@ -1,4 +1,4 @@
-import axios from '@/config/axios';
+import { httpService } from './http.service';
 
 export const authService = {
   login,
@@ -8,18 +8,18 @@ export const authService = {
 };
 
 async function login(email: string, password: string) {
-  const response = await axios.post("/api/auth/login", { email, password });
-  localStorage.setItem("token", response.data.token);
-  return response.data;
+  const response = await httpService.post("/api/auth/login", { email, password });
+  localStorage.setItem("token", response.token);
+  return response;
 }
 
 async function register(name: string, email: string, password: string) {
-  const response = await axios.post("/api/auth/register", {
+  const response = await httpService.post("/api/auth/register", {
     name,
     email,
     password,
   });
-  return response.data;
+  return response;
 }
 
 async function logout() {
@@ -27,6 +27,6 @@ async function logout() {
 }
 
 async function getUser() {
-  const response = await axios.get("/api/auth/me");
-  return response.data;
+  const response = await httpService.get("/api/auth/me", true);
+  return response;
 }
