@@ -35,8 +35,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         return;
       }
       try {
-        const data = await authService.getUser();
-        setUser(data.user);
+        const response = await authService.getUser();
+        setUser(response.user);
       } catch (error) {
         console.error("Authentication error:", error);
         setToken(null);
@@ -51,15 +51,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const login = async (email: string, password: string): Promise<void> => {
     try {
-      const data = await authService.login(email, password);
-      if (!data.token) {
+      const response = await authService.login(email, password);
+      if (!response.token) {
         throw new Error("Login failed: No token received");
       }
-      console.log("Login successful:", data);
-
-      setToken(data.token);
-      setUser(data.user);
-      localStorage.setItem("token", data.token);
+      
+      setToken(response.token);
+      setUser(response.user);
+      // Token is already set in localStorage by the auth service
     } catch (error) {
       console.error("Login error:", error);
       throw error;
@@ -73,7 +72,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const register = async (name: string, email: string, password: string) => {
-    await authService.register(name, email, password);
+    try {
+      await authService.register(name, email, password);
+    } catch (error) {
+      console.error("Registration error:", error);
+      throw error;
+    }
   };
 
   return (
