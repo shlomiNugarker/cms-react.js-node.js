@@ -97,5 +97,21 @@
   "seo_updated_desc": "הגדרות ה-SEO עודכנו בהצלחה.",
   "no_content_found": "לא נמצא תוכן",
   "confirm_delete_content": "האם אתה בטוח שברצונך למחוק את \"{{title}}\"?",
-  "pagination": "עמוד {{currentPage}} מתוך {{totalPages}}"
+  "pagination": "עמוד {{currentPage}} מתוך {{totalPages}}",
+  
+  "content_not_found": "התוכן לא נמצא",
+  "edit_seo_for": "עריכת SEO עבור: {{title}}",
+  "meta_title_placeholder": "כותרת מטא (מומלץ: 50-60 תווים)",
+  "meta_description_placeholder": "תיאור מטא (מומלץ: 150-160 תווים)",
+  "meta_keywords_placeholder": "מילות מפתח מופרדות בפסיקים",
+  "separate_keywords_with_commas": "הפרד מילות מפתח עם פסיקים",
+  "og_title_placeholder": "כותרת לשיתוף ברשתות חברתיות",
+  "og_description_placeholder": "תיאור לשיתוף ברשתות חברתיות",
+  "og_image_url": "כתובת תמונת Open Graph",
+  "og_image_placeholder": "כתובת URL לתמונה לשיתוף ברשתות חברתיות",
+  "canonical_url_placeholder": "כתובת URL קנונית (אם שונה מהכתובת הנוכחית)",
+  "seo_updated": "הגדרות SEO עודכנו",
+  "failed_update_seo": "שגיאה בעדכון הגדרות SEO",
+  "save_seo_settings": "שמור הגדרות SEO",
+  "uploading": "מעלה..."
 } 

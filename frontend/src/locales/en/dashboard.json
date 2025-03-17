@@ -100,5 +100,19 @@
   "seo_updated_desc": "SEO settings have been successfully updated.",
   "no_content_found": "No content found",
   "confirm_delete_content": "Are you sure you want to delete \"{{title}}\"?",
-  "pagination": "Page {{currentPage}} of {{totalPages}}"
+  "pagination": "Page {{currentPage}} of {{totalPages}}",
+  "content_not_found": "Content not found",
+  "edit_seo_for": "Edit SEO for: {{title}}",
+  "meta_title_placeholder": "Meta title (recommended: 50-60 characters)",
+  "meta_description_placeholder": "Meta description (recommended: 150-160 characters)",
+  "meta_keywords_placeholder": "Comma-separated keywords",
+  "separate_keywords_with_commas": "Separate keywords with commas",
+  "og_title_placeholder": "Title for social media sharing",
+  "og_description_placeholder": "Description for social media sharing",
+  "og_image_url": "Open Graph Image URL",
+  "og_image_placeholder": "URL for social media image",
+  "canonical_url_placeholder": "Canonical URL (if different from current URL)",
+  "seo_updated": "SEO Updated",
+  "failed_update_seo": "Failed to update SEO data",
+  "save_seo_settings": "Save SEO Settings"
 } 

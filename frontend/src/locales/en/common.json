@@ -21,5 +21,8 @@
   "failed_delete_user": "Failed to delete user",
   "failed_fetch_data": "Failed to fetch data",
   "failed_save_data": "Failed to save data",
-  "unknown": "Unknown"
+  "unknown": "Unknown",
+  "characters": "characters",
+  "cancel": "Cancel",
+  "saving": "Saving..."
 } 
