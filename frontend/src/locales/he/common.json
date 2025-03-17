@@ -14,6 +14,7 @@
   "role": "תפקיד",
   "actions": "פעולות",
   "delete": "מחק",
+  "edit": "ערוך",
   "activate": "הפעל",
   "deactivate": "השבת",
   "search": "חיפוש",
@@ -21,8 +22,11 @@
   "failed_delete_user": "מחיקת המשתמש נכשלה",
   "failed_fetch_data": "טעינת הנתונים נכשלה",
   "failed_save_data": "שמירת הנתונים נכשלה",
+  "failed_delete": "מחיקת הפריט נכשלה",
   "unknown": "לא ידוע",
   "characters": "תווים",
   "cancel": "ביטול",
-  "saving": "שומר..."
+  "saving": "שומר...",
+  "yes": "כן",
+  "no": "לא"
 } 

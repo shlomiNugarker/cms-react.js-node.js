@@ -14,6 +14,7 @@
   "role": "Role",
   "actions": "Actions",
   "delete": "Delete",
+  "edit": "Edit",
   "activate": "Activate",
   "deactivate": "Deactivate",
   "search": "Search",
@@ -21,8 +22,11 @@
   "failed_delete_user": "Failed to delete user",
   "failed_fetch_data": "Failed to fetch data",
   "failed_save_data": "Failed to save data",
+  "failed_delete": "Failed to delete item",
   "unknown": "Unknown",
   "characters": "characters",
   "cancel": "Cancel",
-  "saving": "Saving..."
+  "saving": "Saving...",
+  "yes": "Yes",
+  "no": "No"
 } 
