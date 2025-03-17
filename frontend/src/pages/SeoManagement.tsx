@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { httpService } from '@/services/http.service';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
+import { useTranslation } from 'react-i18next';
 
 interface Content {
   _id: string;
@@ -25,6 +27,8 @@ interface Content {
 const SeoManagement: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { t } = useTranslation(['dashboard', 'common']);
   
   const [contents, setContents] = useState<Content[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,26 +53,31 @@ const SeoManagement: React.FC = () => {
       setLoading(true);
       setError('');
       
-      const response = await axios.get('/api/content', {
-        params: {
-          page: currentPage,
-          limit: itemsPerPage,
-          search: searchTerm || undefined,
-          contentType: contentType !== 'all' ? contentType : undefined,
-        },
-      });
+      const queryParams = new URLSearchParams();
+      queryParams.append('page', currentPage.toString());
+      queryParams.append('limit', itemsPerPage.toString());
       
-      if (response.data && Array.isArray(response.data.contents)) {
-        setContents(response.data.contents);
-        setTotalPages(Math.ceil((response.data.total || 0) / itemsPerPage));
+      if (searchTerm) {
+        queryParams.append('search', searchTerm);
+      }
+      
+      if (contentType !== 'all') {
+        queryParams.append('contentType', contentType);
+      }
+      
+      const response = await httpService.get(`/api/content?${queryParams.toString()}`, true);
+      
+      if (response && Array.isArray(response.contents)) {
+        setContents(response.contents);
+        setTotalPages(Math.ceil((response.total || 0) / itemsPerPage));
       } else {
         setContents([]);
         setTotalPages(1);
-        setError('Invalid response format from server');
+        setError(t('invalid_response_format', { ns: 'dashboard' }));
       }
     } catch (err) {
       setContents([]);
-      setError('Failed to fetch content');
+      setError(t('failed_fetch_content', { ns: 'dashboard' }));
       setTotalPages(1);
     } finally {
       setLoading(false);
@@ -93,7 +102,7 @@ const SeoManagement: React.FC = () => {
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">SEO Management</h1>
+        <h1 className="text-2xl font-bold">{t('seo_management', { ns: 'dashboard' })}</h1>
       </div>
       
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
@@ -101,7 +110,7 @@ const SeoManagement: React.FC = () => {
           <div className="flex-1">
             <Input
               type="text"
-              placeholder="Search content..."
+              placeholder={t('search_content', { ns: 'dashboard' })}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -112,13 +121,13 @@ const SeoManagement: React.FC = () => {
               value={contentType}
               onChange={handleContentTypeChange}
             >
-              <option value="all">All Types</option>
-              <option value="page">Pages</option>
-              <option value="post">Posts</option>
-              <option value="product">Products</option>
+              <option value="all">{t('all_types', { ns: 'dashboard' })}</option>
+              <option value="page">{t('page', { ns: 'dashboard' })}</option>
+              <option value="post">{t('post', { ns: 'dashboard' })}</option>
+              <option value="product">{t('product', { ns: 'dashboard' })}</option>
             </select>
           </div>
-          <Button type="submit">Search</Button>
+          <Button type="submit">{t('search', { ns: 'common' })}</Button>
         </form>
       </div>
       
@@ -129,7 +138,7 @@ const SeoManagement: React.FC = () => {
       )}
       
       {loading ? (
-        <div className="text-center py-4">Loading...</div>
+        <div className="text-center py-4">{t('loading', { ns: 'common' })}</div>
       ) : (
         <>
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -137,19 +146,19 @@ const SeoManagement: React.FC = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Title
+                    {t('title', { ns: 'dashboard' })}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
+                    {t('content_type', { ns: 'dashboard' })}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Meta Title
+                    {t('meta_title', { ns: 'dashboard' })}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Meta Description
+                    {t('meta_description', { ns: 'dashboard' })}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                    {t('actions', { ns: 'common' })}
                   </th>
                 </tr>
               </thead>
@@ -177,7 +186,7 @@ const SeoManagement: React.FC = () => {
                           to={`/admin/seo/edit/${content._id}`}
                           className="text-indigo-600 hover:text-indigo-900"
                         >
-                          Edit SEO
+                          {t('edit_seo', { ns: 'dashboard' })}
                         </Link>
                       </td>
                     </tr>
@@ -185,7 +194,7 @@ const SeoManagement: React.FC = () => {
                 ) : (
                   <tr>
                     <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
-                      No content found
+                      {t('no_content_found', { ns: 'dashboard' })}
                     </td>
                   </tr>
                 )}
@@ -197,19 +206,17 @@ const SeoManagement: React.FC = () => {
             <div className="flex justify-center mt-6">
               <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
                 <Button
-                  variant="outline"
+                  variant="outline" 
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                 >
-                  Previous
+                  {t('previous', { ns: 'dashboard' })}
                 </Button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                   <Button
                     key={page}
                     variant={page === currentPage ? "default" : "outline"}
                     onClick={() => handlePageChange(page)}
-                    className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
                   >
                     {page}
                   </Button>
@@ -218,9 +225,8 @@ const SeoManagement: React.FC = () => {
                   variant="outline"
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                 >
-                  Next
+                  {t('next', { ns: 'dashboard' })}
                 </Button>
               </nav>
             </div>
