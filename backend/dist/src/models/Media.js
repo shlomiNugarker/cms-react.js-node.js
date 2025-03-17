@@ -49,6 +49,19 @@ const MediaSchema = new mongoose_1.Schema({
         type: String,
         required: true,
     },
+    mediaType: {
+        type: String,
+        enum: ['file', 'embedded'],
+        default: 'file',
+        required: true,
+    },
+    sourceType: {
+        type: String,
+        enum: ['youtube', 'vimeo', 'cloudinary', 'other'],
+    },
+    embedCode: {
+        type: String,
+    },
     alt: {
         type: String,
     },

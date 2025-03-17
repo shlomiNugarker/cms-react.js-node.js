@@ -75,10 +75,13 @@ const upload = multer({
 
 // Public routes
 router.get('/', mediaController.getAllMedia);
+router.get('/cloudinary-status', mediaController.getCloudinaryStatus);
 router.get('/:id', mediaController.getMediaById);
 
 // Protected routes
 router.post('/upload', authMiddleware, upload.single('file'), mediaController.uploadMedia);
+router.post('/embedded', authMiddleware, mediaController.addEmbeddedMedia);
+router.post('/delete', authMiddleware, mediaController.deleteMedia);
 router.put('/:id', authMiddleware, mediaController.updateMedia);
 router.delete('/:id', authMiddleware, mediaController.deleteMedia);
 

@@ -14,7 +14,15 @@ const jwt_1 = require("../utils/jwt");
 const User_1 = require("../models/User");
 const authMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
+    // Try to get token from cookies first
     let token = (_a = req.cookies) === null || _a === void 0 ? void 0 : _a.token;
+    // If no token in cookies, check Authorization header
+    if (!token) {
+        const authHeader = req.header('Authorization');
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.replace('Bearer ', '');
+        }
+    }
     if (!token) {
         return res.status(401).json({ message: "Unauthorized, no token provided" });
     }

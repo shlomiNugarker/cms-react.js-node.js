@@ -11,7 +11,16 @@ export const authMiddleware = async (
   res: Response,
   next: NextFunction
 ) => {
+  // Try to get token from cookies first
   let token = req.cookies?.token;
+  
+  // If no token in cookies, check Authorization header
+  if (!token) {
+    const authHeader = req.header('Authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.replace('Bearer ', '');
+    }
+  }
 
   if (!token) {
     return res.status(401).json({ message: "Unauthorized, no token provided" });

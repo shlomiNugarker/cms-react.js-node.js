@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { toast } from "sonner";
+import MediaPlayer from '@/components/MediaPlayer';
+import EmbeddedMediaDialog from '@/components/EmbeddedMediaDialog';
 
 interface MediaItem {
   _id: string;
@@ -14,6 +16,11 @@ interface MediaItem {
   mimetype: string;
   size: number;
   url: string;
+  mediaType: 'file' | 'embedded';
+  sourceType?: 'youtube' | 'vimeo' | 'cloudinary' | 'other';
+  embedCode?: string;
+  alt?: string;
+  caption?: string;
   createdAt: string;
 }
 
@@ -31,6 +38,8 @@ const MediaManager: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [embeddedMediaDialogOpen, setEmbeddedMediaDialogOpen] = useState(false);
+  const [cloudinaryStatus, setCloudinaryStatus] = useState<'enabled' | 'disabled' | 'unknown'>('unknown');
   
   useEffect(() => {
     if (!user) {
@@ -39,6 +48,7 @@ const MediaManager: React.FC = () => {
     }
     
     fetchMedia();
+    checkCloudinaryStatus();
   }, [user, currentPage, searchTerm, navigate]);
   
   const fetchMedia = async () => {
@@ -80,6 +90,16 @@ const MediaManager: React.FC = () => {
     }
   };
   
+  const checkCloudinaryStatus = async () => {
+    try {
+      const response = await httpService.get('/api/media/cloudinary-status', true);
+      setCloudinaryStatus(response.enabled ? 'enabled' : 'disabled');
+    } catch (err) {
+      console.error('Error checking Cloudinary status:', err);
+      setCloudinaryStatus('unknown');
+    }
+  };
+  
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
@@ -99,22 +119,44 @@ const MediaManager: React.FC = () => {
     try {
       setUploading(true);
       
-      // For file uploads, we'll need to use fetch directly since httpService
-      // is configured for JSON data
-      const token = localStorage.getItem("token");
+      // Get token for authentication
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      
+      // Set proper headers for multipart form data with authentication
       const headers: HeadersInit = {};
       if (token) {
         headers["Authorization"] = `Bearer ${token}`;
+      } else {
+        console.error("No authentication token found");
+        toast.error(t('unauthorized', { ns: 'common' }));
+        setUploading(false);
+        return;
       }
+      
+      // Log authentication attempt
+      console.log("Attempting upload with authentication");
       
       const response = await fetch(`${process.env.NODE_ENV === "production" ? "" : "http://localhost:3030"}/api/media/upload`, {
         method: 'POST',
         headers,
-        body: formData
+        body: formData,
+        credentials: 'include' // Include cookies for cookie-based auth as fallback
       });
       
       if (!response.ok) {
-        throw new Error('Upload failed');
+        const errorText = await response.text();
+        let errorMessage = `Upload failed: ${response.status}`;
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || errorMessage;
+        } catch (e) {
+          // If response isn't JSON, use text as is
+          if (errorText) errorMessage += ` - ${errorText}`;
+        }
+        
+        console.error("Upload error:", errorMessage);
+        throw new Error(errorMessage);
       }
       
       toast.success(t('upload_success', { ns: 'dashboard' }), {
@@ -130,7 +172,8 @@ const MediaManager: React.FC = () => {
       
       fetchMedia();
     } catch (err) {
-      toast.error(t('failed_upload_media', { ns: 'dashboard' }));
+      console.error("Upload error:", err);
+      toast.error(err instanceof Error ? err.message : t('failed_upload_media', { ns: 'dashboard' }));
       setUploading(false);
     }
   };
@@ -205,6 +248,12 @@ const MediaManager: React.FC = () => {
               multiple
             />
             
+            <Button
+              onClick={() => setEmbeddedMediaDialogOpen(true)}
+            >
+              {t('add_embedded', { ns: 'dashboard' })}
+            </Button>
+            
             {selectedItems.length > 0 && (
               <Button 
                 variant="destructive" 
@@ -216,6 +265,12 @@ const MediaManager: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {cloudinaryStatus === 'disabled' && (
+        <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+          {t('cloudinary_not_configured', { ns: 'dashboard' })}
+        </div>
+      )}
       
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -238,12 +293,28 @@ const MediaManager: React.FC = () => {
                 }`}
                 onClick={() => toggleSelect(item._id)}
               >
-                {item.mimetype.startsWith('image/') ? (
+                {item.mediaType === 'embedded' ? (
+                  <div className="aspect-square bg-gray-100 relative">
+                    <MediaPlayer
+                      url={item.url}
+                      sourceType={item.sourceType}
+                      embedCode={item.embedCode}
+                    />
+                  </div>
+                ) : item.mimetype.startsWith('image/') ? (
                   <div className="aspect-square bg-gray-100 relative">
                     <img 
                       src={item.url} 
                       alt={item.originalname}
                       className="w-full h-full object-contain" 
+                    />
+                  </div>
+                ) : item.mimetype.startsWith('video/') ? (
+                  <div className="aspect-square bg-gray-100 relative">
+                    <video 
+                      src={item.url} 
+                      controls
+                      className="w-full h-full object-contain"
                     />
                   </div>
                 ) : (
@@ -263,7 +334,7 @@ const MediaManager: React.FC = () => {
                     {item.originalname}
                   </p>
                   <div className="text-sm text-gray-500">
-                    <p>{formatFileSize(item.size)}</p>
+                    <p>{item.mediaType === 'embedded' ? item.sourceType : formatFileSize(item.size)}</p>
                     <p>{new Date(item.createdAt).toLocaleDateString()}</p>
                   </div>
                   
@@ -277,13 +348,15 @@ const MediaManager: React.FC = () => {
                     >
                       {t('view', { ns: 'dashboard' })}
                     </a>
-                    <a 
-                      href={`${item.url}?download=true`}
-                      className="text-green-500 text-sm hover:underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {t('download', { ns: 'dashboard' })}
-                    </a>
+                    {item.mediaType !== 'embedded' && (
+                      <a 
+                        href={`${item.url}?download=true`}
+                        className="text-green-500 text-sm hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {t('download', { ns: 'dashboard' })}
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>
@@ -291,30 +364,40 @@ const MediaManager: React.FC = () => {
           </div>
           
           {totalPages > 1 && (
-            <div className="flex justify-center mt-8">
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
+            <div className="flex justify-center mt-6">
+              <div className="flex gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
                 >
-                  {t('previous', { ns: 'dashboard' })}
+                  {t('previous', { ns: 'common' })}
                 </Button>
-                <div className="flex items-center px-4">
-                  {t('page_of', { current: currentPage, total: totalPages, ns: 'dashboard' })}
-                </div>
-                <Button 
-                  variant="outline" 
+                
+                <span className="px-4 py-2">
+                  {currentPage} / {totalPages}
+                </span>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
                 >
-                  {t('next', { ns: 'dashboard' })}
+                  {t('next', { ns: 'common' })}
                 </Button>
               </div>
             </div>
           )}
         </>
       )}
+      
+      <EmbeddedMediaDialog
+        open={embeddedMediaDialogOpen}
+        onOpenChange={setEmbeddedMediaDialogOpen}
+        onSuccess={fetchMedia}
+      />
     </div>
   );
 };

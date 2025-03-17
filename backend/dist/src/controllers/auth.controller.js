@@ -47,7 +47,11 @@ const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
         res
             .status(200)
-            .json({ message: "Login successful", user: safeUser });
+            .json({
+            message: "Login successful",
+            user: safeUser,
+            token: token // Also return token for frontend storage and API requests
+        });
     }
     catch (error) {
         console.error("❌ Error in loginUser:", error);

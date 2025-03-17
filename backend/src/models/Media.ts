@@ -7,6 +7,9 @@ export interface IMedia extends Document {
   size: number;
   path: string;
   url: string;
+  mediaType: 'file' | 'embedded';
+  sourceType?: 'youtube' | 'vimeo' | 'cloudinary' | 'other';
+  embedCode?: string;
   alt?: string;
   caption?: string;
   uploadedBy: mongoose.Types.ObjectId;
@@ -39,6 +42,19 @@ const MediaSchema = new Schema<IMedia>(
     url: {
       type: String,
       required: true,
+    },
+    mediaType: {
+      type: String,
+      enum: ['file', 'embedded'],
+      default: 'file',
+      required: true,
+    },
+    sourceType: {
+      type: String,
+      enum: ['youtube', 'vimeo', 'cloudinary', 'other'],
+    },
+    embedCode: {
+      type: String,
     },
     alt: {
       type: String,

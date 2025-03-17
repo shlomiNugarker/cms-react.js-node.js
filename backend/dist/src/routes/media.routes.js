@@ -84,9 +84,12 @@ const upload = (0, multer_1.default)({
 });
 // Public routes
 router.get('/', mediaController.getAllMedia);
+router.get('/cloudinary-status', mediaController.getCloudinaryStatus);
 router.get('/:id', mediaController.getMediaById);
 // Protected routes
 router.post('/upload', auth_middleware_1.authMiddleware, upload.single('file'), mediaController.uploadMedia);
+router.post('/embedded', auth_middleware_1.authMiddleware, mediaController.addEmbeddedMedia);
+router.post('/delete', auth_middleware_1.authMiddleware, mediaController.deleteMedia);
 router.put('/:id', auth_middleware_1.authMiddleware, mediaController.updateMedia);
 router.delete('/:id', auth_middleware_1.authMiddleware, mediaController.deleteMedia);
 exports.default = router;

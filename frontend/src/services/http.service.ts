@@ -5,7 +5,19 @@ const BASE_URL =
   process.env.NODE_ENV === "production" ? "" : "http://localhost:3030";
 
 function getAuthHeaders(secure: boolean) {
-  return { "Content-Type": "application/json" };
+  const headers: Record<string, string> = { 
+    "Content-Type": "application/json" 
+  };
+  
+  // Add token to headers if secure requests need token auth
+  if (secure) {
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+  }
+  
+  return headers;
 }
 
 async function request(
