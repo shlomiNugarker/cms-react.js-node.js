@@ -1,12 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { postsApi, categoriesApi } from '@/services/api.service';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { useAuth } from '@/context/AuthContext';
-import { useTranslation } from 'react-i18next';
-import { toast } from "sonner";
+import { useParams, useNavigate } from 'react-router-dom';
+import { Card, CardContent, Button, TextField, MenuItem, FormControl, Select, InputLabel, Typography, Box, Chip, CircularProgress } from '@mui/material';
+import Grid from '@mui/material/Grid';
+import { postsApi, categoriesApi } from '../services/api.service';
+import { RichTextEditor } from '../components/RichTextEditor';
+import { MediaSelector } from '../components/MediaSelector';
+import { SEOSection } from '../components/SEOSection';
+
+// Add Media interface to match the MediaSelector component
+interface Media {
+  _id: string;
+  url: string;
+  originalname: string;
+  mimetype: string;
+  mediaType: 'file' | 'embedded';
+  sourceType?: 'youtube' | 'vimeo' | 'cloudinary' | 'other';
+  embedCode?: string;
+  createdAt: string;
+}
 
 interface PostFormData {
   _id?: string;
@@ -14,29 +25,29 @@ interface PostFormData {
   slug: string;
   content: string;
   status: 'draft' | 'published' | 'archived';
-  featuredImage?: string;
   categories: string[];
   tags: string[];
-  publishDate?: Date;
-  seo?: {
+  featuredImage?: string;
+  publishDate?: string;
+  seo: {
     metaTitle?: string;
     metaDescription?: string;
     metaKeywords?: string[];
+    ogTitle?: string;
+    ogDescription?: string;
+    ogImage?: string;
+    twitterTitle?: string;
+    twitterDescription?: string;
+    twitterImage?: string;
     canonicalUrl?: string;
+    noIndex?: boolean;
+    structuredData?: string;
   };
-}
-
-interface Category {
-  _id: string;
-  name: string;
-  slug: string;
 }
 
 const PostForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { t } = useTranslation(['dashboard', 'common']);
   const isEditMode = !!id;
 
   const [formData, setFormData] = useState<PostFormData>({
@@ -45,358 +56,414 @@ const PostForm: React.FC = () => {
     content: '',
     status: 'draft',
     categories: [],
-    tags: []
+    tags: [],
+    seo: {}
   });
-  const [allCategories, setAllCategories] = useState<Category[]>([]);
-  const [tagInput, setTagInput] = useState('');
+
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-
+  const [error, setError] = useState<string | null>(null);
+  const [availableCategories, setAvailableCategories] = useState<any[]>([]);
+  const [newTag, setNewTag] = useState('');
+  const [mediaOpen, setMediaOpen] = useState(false);
+  
   useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch categories
+        const [categories] = await Promise.all([
+          categoriesApi.getCategories({ type: 'post' })
+        ]);
+        
+        setAvailableCategories(categories?.data || []);
+        
+        // Fetch post data for edit mode
+        if (isEditMode && id) {
+          const post = await postsApi.getPostById(id);
+          console.log('Post data from API:', post);
+          
+          if (!post) {
+            console.error('No data returned from API');
+            setError('Could not load post data');
+            return;
+          }
+          
+          // Create the form data with all required fields
+          const updatedFormData = {
+            _id: post._id,
+            title: post.title || '',
+            slug: post.slug || '',
+            content: post.content || '',
+            status: post.status || 'draft',
+            categories: post.categories || [],
+            tags: post.tags || [],
+            featuredImage: post.featuredImage,
+            publishDate: post.publishDate,
+            seo: post.seo || {}
+          };
+          
+          console.log('Setting form data to:', updatedFormData);
+          setFormData(updatedFormData);
+        }
+      } catch (err) {
+        setError('Failed to load data');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [id, isEditMode]);
 
-    fetchCategories();
-
-    if (isEditMode) {
-      fetchPost();
-    }
-  }, [id, user, navigate, isEditMode]);
-
-  const fetchPost = async () => {
-    try {
-      setLoading(true);
-      const response = await postsApi.getPostById(id!);
-      setFormData(response);
-      setLoading(false);
-    } catch (err) {
-      setError(t('failed_fetch_post', { ns: 'dashboard' }));
-      setLoading(false);
-    }
-  };
-
-  const fetchCategories = async () => {
-    try {
-      const categories = await categoriesApi.getAllCategories();
-      setAllCategories(categories);
-    } catch (err) {
-      console.error('Failed to fetch categories', err);
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    console.log(`Updating field: ${name} with value:`, value);
+    
+    if (!name) return;
+    
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const generateSlug = () => {
+    if (!formData.title) {
+      setError('Title is required to generate a slug');
+      return;
+    }
+    
     const slug = formData.title
       .toLowerCase()
       .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-');
+      .replace(/\s+/g, '-')
+      .replace(/^-+|-+$/g, ''); // Clean up extra hyphens at start/end
     
-    setFormData(prev => ({ ...prev, slug }));
-  };
-
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const options = Array.from(e.target.selectedOptions, option => option.value);
-    setFormData(prev => ({ ...prev, categories: options }));
-  };
-
-  const handleAddTag = () => {
-    if (tagInput.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, tagInput.trim()]
-      }));
-      setTagInput('');
-    }
-  };
-
-  const handleRemoveTag = (tag: string) => {
     setFormData(prev => ({
       ...prev,
-      tags: prev.tags.filter(t => t !== tag)
+      slug
+    }));
+  };
+
+  // Auto-generate slug when title is set (for new posts)
+  useEffect(() => {
+    if (!isEditMode && formData.title && !formData.slug) {
+      generateSlug();
+    }
+  }, [formData.title, isEditMode]);
+
+  const handleContentChange = (content: string) => {
+    setFormData(prev => ({
+      ...prev,
+      content
+    }));
+  };
+
+  const handleTagAdd = () => {
+    if (!newTag.trim()) return;
+    if (formData.tags?.includes(newTag.trim())) return;
+    
+    setFormData(prev => ({
+      ...prev,
+      tags: [...(prev.tags || []), newTag.trim()]
+    }));
+    setNewTag('');
+  };
+
+  const handleTagDelete = (tagToDelete: string) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags?.filter(tag => tag !== tagToDelete) || []
+    }));
+  };
+
+  const handleMediaSelect = (media: Media) => {
+    setFormData(prev => ({
+      ...prev,
+      featuredImage: media._id
+    }));
+    setMediaOpen(false);
+  };
+
+  const handleSEOChange = (seoData: any) => {
+    setFormData(prev => ({
+      ...prev,
+      seo: {
+        ...(prev.seo || {}),
+        ...seoData
+      }
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     try {
       setSaving(true);
-      setError('');
+      setError(null);
       
       if (isEditMode) {
         await postsApi.updatePost(id!, formData);
-        toast.success(t('post_updated_successfully', { ns: 'dashboard' }));
+        navigate('/admin/content');
       } else {
         await postsApi.createPost(formData);
-        toast.success(t('post_created_successfully', { ns: 'dashboard' }));
+        navigate('/admin/content');
       }
-      
-      navigate('/admin/content');
-    } catch (err) {
-      setError(t('failed_save_post', { ns: 'dashboard' }));
+    } catch (err: any) {
+      setError(err.message || 'Failed to save post');
+      console.error(err);
+    } finally {
       setSaving(false);
     }
   };
-  
+
   if (loading) {
-    return <div className="text-center py-10">{t('loading', { ns: 'common' })}</div>;
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-4xl">
-      <h1 className="text-2xl font-bold mb-4">
-        {isEditMode 
-          ? t('edit_post', { ns: 'dashboard', title: formData.title }) 
-          : t('create_new_post', { ns: 'dashboard' })}
-      </h1>
-      
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
-          {error}
-        </div>
-      )}
-      
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-2">
-          <label htmlFor="title" className="block text-sm font-medium">
-            {t('title', { ns: 'dashboard' })} *
-          </label>
-          <Input
-            id="title"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <label htmlFor="slug" className="block text-sm font-medium">
-              {t('slug', { ns: 'dashboard' })} *
-            </label>
-            <Button 
-              type="button" 
-              variant="outline" 
-              size="sm"
-              onClick={generateSlug}
-            >
-              {t('generate_from_title', { ns: 'dashboard' })}
-            </Button>
-          </div>
-          <Input
-            id="slug"
-            name="slug"
-            value={formData.slug}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <label htmlFor="content" className="block text-sm font-medium">
-            {t('content', { ns: 'dashboard' })} *
-          </label>
-          <Textarea
-            id="content"
-            name="content"
-            value={formData.content}
-            onChange={handleChange}
-            rows={15}
-            required
-          />
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label htmlFor="status" className="block text-sm font-medium">
-              {t('status', { ns: 'dashboard' })} *
-            </label>
-            <select
-              id="status"
-              name="status"
-              className="w-full p-2 border rounded"
-              value={formData.status}
-              onChange={handleChange}
-              required
-            >
-              <option value="draft">{t('draft', { ns: 'dashboard' })}</option>
-              <option value="published">{t('published', { ns: 'dashboard' })}</option>
-              <option value="archived">{t('archived', { ns: 'dashboard' })}</option>
-            </select>
-          </div>
+    <form onSubmit={handleSubmit}>
+      <Card>
+        <CardContent>
+          <Typography variant="h5" component="h2" gutterBottom>
+            {isEditMode ? 'Edit Post' : 'Create New Post'}
+          </Typography>
           
-          <div className="space-y-2">
-            <label htmlFor="categories" className="block text-sm font-medium">
-              {t('categories', { ns: 'dashboard' })}
-            </label>
-            <select
-              id="categories"
-              name="categories"
-              className="w-full p-2 border rounded"
-              value={formData.categories}
-              onChange={handleCategoryChange}
-              multiple
-              size={3}
-            >
-              {allCategories.map(category => (
-                <option key={category._id} value={category.name}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          {error && (
+            <Typography color="error" sx={{ mb: 2 }}>
+              {error}
+            </Typography>
+          )}
           
-          <div className="space-y-2">
-            <label htmlFor="publishDate" className="block text-sm font-medium">
-              {t('publish_date', { ns: 'dashboard' })}
-            </label>
-            <Input
-              id="publishDate"
-              name="publishDate"
-              type="datetime-local"
-              value={formData.publishDate ? new Date(formData.publishDate).toISOString().slice(0, 16) : ''}
-              onChange={handleChange}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="featuredImage" className="block text-sm font-medium">
-              {t('featured_image', { ns: 'dashboard' })}
-            </label>
-            <Input
-              id="featuredImage"
-              name="featuredImage"
-              type="text"
-              value={formData.featuredImage || ''}
-              onChange={handleChange}
-              placeholder="Image URL"
-            />
-          </div>
-        </div>
-        
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">
-            {t('tags', { ns: 'dashboard' })}
-          </label>
-          <div className="flex flex-wrap gap-2 mb-2">
-            {formData.tags.map(tag => (
-              <div
-                key={tag}
-                className="bg-gray-100 px-2 py-1 rounded-md flex items-center gap-1"
-              >
-                <span>{tag}</span>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveTag(tag)}
-                  className="text-red-500 font-bold"
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={8}>
+              {/* Main Post Information */}
+              <TextField
+                label="Title"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                fullWidth
+                required
+                margin="normal"
+              />
+              
+              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                <TextField
+                  label="Slug"
+                  name="slug"
+                  value={formData.slug}
+                  onChange={handleChange}
+                  fullWidth
+                  margin="normal"
+                  helperText="The URL-friendly version of the title"
+                />
+                <Button 
+                  variant="outlined" 
+                  sx={{ mt: 2, height: 56 }}
+                  onClick={generateSlug}
                 >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <Input
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              placeholder={t('add_tag', { ns: 'dashboard' })}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAddTag();
-                }
-              }}
-            />
-            <Button
-              type="button"
-              onClick={handleAddTag}
-            >
-              {t('add', { ns: 'common' })}
-            </Button>
-          </div>
-        </div>
-        
-        <div className="border-t pt-4 mt-4">
-          <h2 className="text-lg font-semibold mb-2">{t('seo_settings', { ns: 'dashboard' })}</h2>
+                  Generate
+                </Button>
+              </Box>
+              
+              <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+                Content
+              </Typography>
+              <RichTextEditor 
+                initialValue={formData.content}
+                onChange={handleContentChange}
+              />
+              
+              <Box sx={{ mt: 4 }}>
+                <Typography variant="h6" gutterBottom>
+                  SEO Settings
+                </Typography>
+                <SEOSection 
+                  seoData={formData.seo} 
+                  onChange={handleSEOChange} 
+                />
+              </Box>
+            </Grid>
+            
+            <Grid item xs={12} md={4}>
+              {/* Post Sidebar */}
+              <Card variant="outlined" sx={{ mb: 3 }}>
+                <CardContent>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Post Settings
+                  </Typography>
+                  
+                  <FormControl fullWidth margin="normal">
+                    <InputLabel>Status</InputLabel>
+                    <Select
+                      name="status"
+                      value={formData.status}
+                      onChange={(e) => handleChange(e as any)}
+                      label="Status"
+                    >
+                      <MenuItem value="draft">Draft</MenuItem>
+                      <MenuItem value="published">Published</MenuItem>
+                      <MenuItem value="archived">Archived</MenuItem>
+                    </Select>
+                  </FormControl>
+                  
+                  <TextField
+                    label="Publish Date"
+                    name="publishDate"
+                    type="datetime-local"
+                    value={formData.publishDate || ''}
+                    onChange={handleChange}
+                    fullWidth
+                    margin="normal"
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                  />
+                </CardContent>
+              </Card>
+              
+              <Card variant="outlined" sx={{ mb: 3 }}>
+                <CardContent>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Featured Image
+                  </Typography>
+                  
+                  <Button
+                    variant="outlined"
+                    onClick={() => setMediaOpen(true)}
+                    fullWidth
+                    sx={{ mb: 2 }}
+                  >
+                    {formData.featuredImage ? 'Change Featured Image' : 'Select Featured Image'}
+                  </Button>
+                  
+                  {formData.featuredImage && (
+                    <Box sx={{ mt: 1 }}>
+                      <Typography variant="body2" sx={{ mb: 1 }}>Selected Image:</Typography>
+                      <Chip 
+                        label={formData.featuredImage}
+                        onDelete={() => setFormData(prev => ({ ...prev, featuredImage: undefined }))}
+                      />
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+              
+              <Card variant="outlined" sx={{ mb: 3 }}>
+                <CardContent>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Categories
+                  </Typography>
+                  
+                  <FormControl fullWidth margin="normal">
+                    <InputLabel>Categories</InputLabel>
+                    <Select
+                      name="categories"
+                      multiple
+                      value={formData.categories || []}
+                      onChange={(e) => handleChange(e as any)}
+                      label="Categories"
+                      renderValue={(selected) => (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {(selected as string[]).map((value) => {
+                            const category = availableCategories.find(cat => cat._id === value);
+                            return (
+                              <Chip 
+                                key={value} 
+                                label={category ? category.name : value} 
+                              />
+                            );
+                          })}
+                        </Box>
+                      )}
+                    >
+                      {availableCategories && availableCategories.length > 0 ? availableCategories.map((category) => (
+                        <MenuItem key={category._id} value={category._id}>
+                          {category.name}
+                        </MenuItem>
+                      )) : (
+                        <MenuItem disabled>No categories available</MenuItem>
+                      )}
+                    </Select>
+                  </FormControl>
+                </CardContent>
+              </Card>
+              
+              <Card variant="outlined" sx={{ mb: 3 }}>
+                <CardContent>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Tags
+                  </Typography>
+                  
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
+                    <TextField
+                      label="Add Tag"
+                      value={newTag}
+                      onChange={(e) => setNewTag(e.target.value)}
+                      sx={{ flexGrow: 1, mr: 1 }}
+                    />
+                    <Button 
+                      variant="contained" 
+                      onClick={handleTagAdd}
+                      sx={{ mt: 1 }}
+                    >
+                      Add
+                    </Button>
+                  </Box>
+                  
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {(formData.tags || []).map((tag, index) => (
+                      <Chip 
+                        key={index}
+                        label={tag}
+                        onDelete={() => handleTagDelete(tag)}
+                      />
+                    ))}
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
           
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="seoTitle" className="block text-sm font-medium">
-                {t('meta_title', { ns: 'dashboard' })}
-              </label>
-              <Input
-                id="seoTitle"
-                name="seoTitle"
-                value={formData.seo?.metaTitle || ''}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  seo: { ...prev.seo, metaTitle: e.target.value }
-                }))}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="seoDescription" className="block text-sm font-medium">
-                {t('meta_description', { ns: 'dashboard' })}
-              </label>
-              <Textarea
-                id="seoDescription"
-                name="seoDescription"
-                value={formData.seo?.metaDescription || ''}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  seo: { ...prev.seo, metaDescription: e.target.value }
-                }))}
-                rows={3}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="seoKeywords" className="block text-sm font-medium">
-                {t('meta_keywords', { ns: 'dashboard' })}
-              </label>
-              <Input
-                id="seoKeywords"
-                name="seoKeywords"
-                placeholder="keyword1, keyword2, keyword3"
-                value={formData.seo?.metaKeywords?.join(', ') || ''}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  seo: { 
-                    ...prev.seo, 
-                    metaKeywords: e.target.value.split(',').map(k => k.trim()).filter(Boolean)
-                  }
-                }))}
-              />
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex justify-end gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate('/admin/content')}
-          >
-            {t('cancel', { ns: 'common' })}
-          </Button>
-          <Button
-            type="submit"
-            disabled={saving}
-          >
-            {saving ? t('saving', { ns: 'common' }) : t('save', { ns: 'common' })}
-          </Button>
-        </div>
-      </form>
-    </div>
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+            <Button 
+              variant="outlined" 
+              onClick={() => navigate('/admin/posts')}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={saving}
+            >
+              {saving ? (
+                <>
+                  <CircularProgress size={24} sx={{ mr: 1 }} />
+                  Saving...
+                </>
+              ) : (
+                isEditMode ? 'Update Post' : 'Create Post'
+              )}
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
+      
+      <MediaSelector 
+        open={mediaOpen}
+        onOpenChange={setMediaOpen}
+        onSelect={handleMediaSelect}
+      />
+    </form>
   );
 };
 

@@ -14,8 +14,7 @@ export const validatePost = [
   body('title').notEmpty().withMessage('Title is required'),
   body('content').notEmpty().withMessage('Content is required'),
   body('status').isIn(['draft', 'published', 'archived']).withMessage('Invalid status'),
-  body('categories').isArray().optional(),
-  body('tags').isArray().optional(),
+  body('slug').optional().isString(),
   body('customSlug').optional().isString(),
 ];
 
@@ -28,7 +27,7 @@ export const createPost = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ errors: errors.array() });
     }
     
-    const { title, content, status, categories, tags, featuredImage, publishDate, seo, customSlug } = req.body;
+    const { title, content, status, featuredImage, categories, tags, publishDate, seo, customSlug, slug } = req.body;
     
     if (!req.user) {
       return res.status(401).json({ message: 'Unauthorized' });
@@ -39,14 +38,15 @@ export const createPost = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ message: 'You do not have permission to create posts' });
     }
     
-    // Generate slug from title or use custom slug
-    const slug = customSlug || title
+    // Use provided slug, fall back to customSlug, or generate from title
+    const finalSlug = slug || customSlug || title
       .toLowerCase()
-      .replace(/[^\w\s]/gi, '')
-      .replace(/\s+/g, '-');
+      .replace(/[^\w\s-]/gi, '')
+      .replace(/\s+/g, '-')
+      .replace(/^-+|-+$/g, ''); // Clean up extra hyphens at start/end
     
     // Check if slug already exists
-    const existingPost = await Post.findOne({ slug });
+    const existingPost = await Post.findOne({ slug: finalSlug });
     if (existingPost) {
       return res.status(400).json({ message: 'A post with this slug already exists' });
     }
@@ -54,14 +54,14 @@ export const createPost = async (req: AuthRequest, res: Response) => {
     // Create new post
     const post = new Post({
       title,
-      slug,
+      slug: finalSlug,
       content,
       status,
-      categories: categories || [],
-      tags: tags || [],
       author: req.user._id,
       featuredImage,
-      publishDate: publishDate || Date.now(),
+      categories,
+      tags,
+      publishDate,
       seo,
     });
     
@@ -244,7 +244,7 @@ export const updatePost = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ errors: errors.array() });
     }
     
-    const { title, content, status, categories, tags, featuredImage, publishDate, seo, customSlug } = req.body;
+    const { title, content, status, featuredImage, categories, tags, publishDate, seo, customSlug, slug } = req.body;
     
     if (!req.user) {
       return res.status(401).json({ message: 'Unauthorized' });
@@ -262,20 +262,29 @@ export const updatePost = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: 'Post not found' });
     }
     
-    // Update slug if customSlug is provided or title has changed
-    let slug = post.slug;
-    if (customSlug) {
-      slug = customSlug;
-    } else if (title && title !== post.title) {
-      slug = title
+    // Determine new slug
+    let finalSlug = post.slug;
+    
+    // If slug is explicitly provided, use it
+    if (slug !== undefined) {
+      finalSlug = slug;
+    } 
+    // Otherwise check for customSlug (backward compatibility)
+    else if (customSlug) {
+      finalSlug = customSlug;
+    } 
+    // If title changed and no slug provided, generate new slug from title
+    else if (title && title !== post.title) {
+      finalSlug = title
         .toLowerCase()
-        .replace(/[^\w\s]/gi, '')
-        .replace(/\s+/g, '-');
+        .replace(/[^\w\s-]/gi, '')
+        .replace(/\s+/g, '-')
+        .replace(/^-+|-+$/g, ''); // Clean up extra hyphens at start/end
     }
     
-    // Check if new slug already exists (except for the current post)
-    if (slug !== post.slug) {
-      const existingPost = await Post.findOne({ slug, _id: { $ne: post._id } });
+    // Only check for duplicate if slug is being changed
+    if (finalSlug !== post.slug) {
+      const existingPost = await Post.findOne({ slug: finalSlug, _id: { $ne: post._id } });
       if (existingPost) {
         return res.status(400).json({ message: 'A post with this slug already exists' });
       }
@@ -283,13 +292,14 @@ export const updatePost = async (req: AuthRequest, res: Response) => {
     
     // Update post
     post.title = title || post.title;
-    post.slug = slug;
+    post.slug = finalSlug;
     post.content = content || post.content;
     post.status = status || post.status;
-    post.categories = categories || post.categories;
-    post.tags = tags || post.tags;
     post.featuredImage = featuredImage || post.featuredImage;
-    post.publishDate = publishDate || post.publishDate;
+    
+    if (categories) post.categories = categories;
+    if (tags) post.tags = tags;
+    if (publishDate) post.publishDate = new Date(publishDate);
     
     if (seo) {
       post.seo = {

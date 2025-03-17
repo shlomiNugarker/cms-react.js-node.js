@@ -93,8 +93,9 @@ export const productsApi = {
 
 // Categories API
 export const categoriesApi = {
-  getAllCategories: () => httpService.get('/api/categories'),
-  getCategoryById: (id: string) => httpService.get(`/api/categories/${id}`),
+  getAllCategories: () => httpService.get('/api/categories', true),
+  getCategories: (params: { type?: string }) => httpService.get(`/api/categories?type=${params.type || ''}`, true),
+  getCategoryById: (id: string) => httpService.get(`/api/categories/${id}`, true),
   createCategory: (categoryData: any) => httpService.post('/api/categories', categoryData, true),
   updateCategory: (id: string, categoryData: any) => httpService.put(`/api/categories/${id}`, categoryData, true),
   deleteCategory: (id: string) => httpService.del(`/api/categories/${id}`, true),

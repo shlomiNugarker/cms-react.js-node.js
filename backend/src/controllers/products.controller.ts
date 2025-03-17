@@ -12,12 +12,10 @@ interface AuthRequest extends Request {
 // Validation middleware for product
 export const validateProduct = [
   body('title').notEmpty().withMessage('Title is required'),
-  body('description').notEmpty().withMessage('Description is required'),
   body('price').isNumeric().withMessage('Price must be a number'),
-  body('sku').notEmpty().withMessage('SKU is required'),
+  body('description').notEmpty().withMessage('Description is required'),
   body('status').isIn(['draft', 'published', 'archived']).withMessage('Invalid status'),
-  body('categories').isArray().optional(),
-  body('tags').isArray().optional(),
+  body('slug').optional().isString(),
   body('customSlug').optional().isString(),
 ];
 
@@ -31,9 +29,8 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
     }
     
     const { 
-      title, description, shortDescription, price, salePrice, sku, status, 
-      categories, tags, featuredImage, galleryImages, inStock, 
-      stockQuantity, attributes, seo, customSlug 
+      title, description, price, sku, status, inStock, categories, tags, 
+      attributes, galleryImages, featuredImage, seo, customSlug, slug 
     } = req.body;
     
     if (!req.user) {
@@ -45,42 +42,34 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ message: 'You do not have permission to create products' });
     }
     
-    // Generate slug from title or use custom slug
-    const slug = customSlug || title
+    // Use provided slug, fall back to customSlug, or generate from title
+    const finalSlug = slug || customSlug || title
       .toLowerCase()
-      .replace(/[^\w\s]/gi, '')
-      .replace(/\s+/g, '-');
+      .replace(/[^\w\s-]/gi, '')
+      .replace(/\s+/g, '-')
+      .replace(/^-+|-+$/g, ''); // Clean up extra hyphens at start/end
     
     // Check if slug already exists
-    const existingProduct = await Product.findOne({ slug });
+    const existingProduct = await Product.findOne({ slug: finalSlug });
     if (existingProduct) {
       return res.status(400).json({ message: 'A product with this slug already exists' });
-    }
-    
-    // Check if SKU already exists
-    const existingProductSku = await Product.findOne({ sku });
-    if (existingProductSku) {
-      return res.status(400).json({ message: 'A product with this SKU already exists' });
     }
     
     // Create new product
     const product = new Product({
       title,
-      slug,
+      slug: finalSlug,
       description,
-      shortDescription,
       price,
-      salePrice,
       sku,
       status,
-      categories: categories || [],
-      tags: tags || [],
-      author: req.user._id,
-      featuredImage,
-      galleryImages,
       inStock: inStock !== undefined ? inStock : true,
-      stockQuantity,
+      author: req.user._id,
+      categories,
+      tags,
       attributes,
+      galleryImages,
+      featuredImage,
       seo,
     });
     
@@ -312,9 +301,8 @@ export const updateProduct = async (req: AuthRequest, res: Response) => {
     }
     
     const { 
-      title, description, shortDescription, price, salePrice, sku, status, 
-      categories, tags, featuredImage, galleryImages, inStock, 
-      stockQuantity, attributes, seo, customSlug 
+      title, description, price, sku, status, inStock, categories, tags, 
+      attributes, galleryImages, featuredImage, seo, customSlug, slug 
     } = req.body;
     
     if (!req.user) {
@@ -333,52 +321,48 @@ export const updateProduct = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: 'Product not found' });
     }
     
-    // Update slug if customSlug is provided or title has changed
-    let slug = product.slug;
-    if (customSlug) {
-      slug = customSlug;
-    } else if (title && title !== product.title) {
-      slug = title
+    // Determine new slug
+    let finalSlug = product.slug;
+    
+    // If slug is explicitly provided, use it
+    if (slug !== undefined) {
+      finalSlug = slug;
+    } 
+    // Otherwise check for customSlug (backward compatibility)
+    else if (customSlug) {
+      finalSlug = customSlug;
+    } 
+    // If title changed and no slug provided, generate new slug from title
+    else if (title && title !== product.title) {
+      finalSlug = title
         .toLowerCase()
-        .replace(/[^\w\s]/gi, '')
-        .replace(/\s+/g, '-');
+        .replace(/[^\w\s-]/gi, '')
+        .replace(/\s+/g, '-')
+        .replace(/^-+|-+$/g, ''); // Clean up extra hyphens at start/end
     }
     
-    // Check if new slug already exists (except for the current product)
-    if (slug !== product.slug) {
-      const existingProduct = await Product.findOne({ slug, _id: { $ne: product._id } });
+    // Only check for duplicate if slug is being changed
+    if (finalSlug !== product.slug) {
+      const existingProduct = await Product.findOne({ slug: finalSlug, _id: { $ne: product._id } });
       if (existingProduct) {
         return res.status(400).json({ message: 'A product with this slug already exists' });
       }
     }
     
-    // Check if new SKU already exists (except for the current product)
-    if (sku && sku !== product.sku) {
-      const existingProduct = await Product.findOne({ sku, _id: { $ne: product._id } });
-      if (existingProduct) {
-        return res.status(400).json({ message: 'A product with this SKU already exists' });
-      }
-    }
-    
     // Update product
     product.title = title || product.title;
-    product.slug = slug;
+    product.slug = finalSlug;
     product.description = description || product.description;
-    product.shortDescription = shortDescription || product.shortDescription;
-    product.price = price !== undefined ? price : product.price;
-    product.salePrice = salePrice !== undefined ? salePrice : product.salePrice;
-    product.sku = sku || product.sku;
-    product.status = status || product.status;
-    product.categories = categories || product.categories;
-    product.tags = tags || product.tags;
-    product.featuredImage = featuredImage || product.featuredImage;
-    product.galleryImages = galleryImages || product.galleryImages;
-    product.inStock = inStock !== undefined ? inStock : product.inStock;
-    product.stockQuantity = stockQuantity !== undefined ? stockQuantity : product.stockQuantity;
     
-    if (attributes) {
-      product.attributes = new Map(Object.entries(attributes));
-    }
+    if (price !== undefined) product.price = price;
+    if (sku !== undefined) product.sku = sku;
+    if (status !== undefined) product.status = status;
+    if (inStock !== undefined) product.inStock = inStock;
+    if (categories) product.categories = categories;
+    if (tags) product.tags = tags;
+    if (attributes) product.attributes = attributes;
+    if (galleryImages) product.galleryImages = galleryImages;
+    if (featuredImage) product.featuredImage = featuredImage;
     
     if (seo) {
       product.seo = {

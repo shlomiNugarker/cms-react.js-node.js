@@ -26,7 +26,7 @@ export const createPage = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ errors: errors.array() });
     }
     
-    const { title, content, status, featuredImage, layout, order, parent, seo, customSlug } = req.body;
+    const { title, content, status, featuredImage, layout, order, parent, seo, customSlug, slug } = req.body;
     
     if (!req.user) {
       return res.status(401).json({ message: 'Unauthorized' });
@@ -37,14 +37,15 @@ export const createPage = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ message: 'You do not have permission to create pages' });
     }
     
-    // Generate slug from title or use custom slug
-    const slug = customSlug || title
+    // Use provided slug, fall back to customSlug, or generate from title
+    const finalSlug = slug || customSlug || title
       .toLowerCase()
-      .replace(/[^\w\s]/gi, '')
-      .replace(/\s+/g, '-');
+      .replace(/[^\w\s-]/gi, '')
+      .replace(/\s+/g, '-')
+      .replace(/^-+|-+$/g, ''); // Clean up extra hyphens at start/end
     
     // Check if slug already exists
-    const existingPage = await Page.findOne({ slug });
+    const existingPage = await Page.findOne({ slug: finalSlug });
     if (existingPage) {
       return res.status(400).json({ message: 'A page with this slug already exists' });
     }
@@ -52,7 +53,7 @@ export const createPage = async (req: AuthRequest, res: Response) => {
     // Create new page
     const page = new Page({
       title,
-      slug,
+      slug: finalSlug,
       content,
       status,
       author: req.user._id,
@@ -152,7 +153,7 @@ export const updatePage = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ errors: errors.array() });
     }
     
-    const { title, content, status, featuredImage, layout, order, parent, seo, customSlug } = req.body;
+    const { title, content, status, featuredImage, layout, order, parent, seo, customSlug, slug } = req.body;
     
     if (!req.user) {
       return res.status(401).json({ message: 'Unauthorized' });
@@ -170,20 +171,29 @@ export const updatePage = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: 'Page not found' });
     }
     
-    // Update slug if customSlug is provided or title has changed
-    let slug = page.slug;
-    if (customSlug) {
-      slug = customSlug;
-    } else if (title && title !== page.title) {
-      slug = title
+    // Determine new slug
+    let finalSlug = page.slug;
+    
+    // If slug is explicitly provided, use it
+    if (slug !== undefined) {
+      finalSlug = slug;
+    } 
+    // Otherwise check for customSlug (backward compatibility)
+    else if (customSlug) {
+      finalSlug = customSlug;
+    } 
+    // If title changed and no slug provided, generate new slug from title
+    else if (title && title !== page.title) {
+      finalSlug = title
         .toLowerCase()
-        .replace(/[^\w\s]/gi, '')
-        .replace(/\s+/g, '-');
+        .replace(/[^\w\s-]/gi, '')
+        .replace(/\s+/g, '-')
+        .replace(/^-+|-+$/g, ''); // Clean up extra hyphens at start/end
     }
     
-    // Check if new slug already exists (except for the current page)
-    if (slug !== page.slug) {
-      const existingPage = await Page.findOne({ slug, _id: { $ne: page._id } });
+    // Only check for duplicate if slug is being changed
+    if (finalSlug !== page.slug) {
+      const existingPage = await Page.findOne({ slug: finalSlug, _id: { $ne: page._id } });
       if (existingPage) {
         return res.status(400).json({ message: 'A page with this slug already exists' });
       }
@@ -191,7 +201,7 @@ export const updatePage = async (req: AuthRequest, res: Response) => {
     
     // Update page
     page.title = title || page.title;
-    page.slug = slug;
+    page.slug = finalSlug;
     page.content = content || page.content;
     page.status = status || page.status;
     page.featuredImage = featuredImage || page.featuredImage;
